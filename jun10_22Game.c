@@ -105,7 +105,6 @@ void whenPlayerLoses(int number)
 
 int startGame(int number)
 {
-    printf("%d\n",number);
     int playerGuess = -1;
     int methodOfHint;
     int tempNumber = number;
