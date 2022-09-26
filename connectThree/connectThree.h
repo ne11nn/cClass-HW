@@ -4,6 +4,9 @@
 #include <windows.h>
 #define ROW 3
 #define COL 3
+#define PLAYER_WIN 1
+#define COMPUTER_WIN 2
+#define TIE 0
 
 void menu();
 void game();

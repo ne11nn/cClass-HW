@@ -31,8 +31,6 @@ void displayBoard(char board[ROW][COL], int row, int col)
         }
     }
 }
-//player = 1
-//computer = 0
 void placePiece(char board[ROW][COL], int rowPos, int colPos, int player)
 {
     if(player == 1)
@@ -116,14 +114,14 @@ int isRowWin(char board[ROW][COL], int row)
     {
         if(board[i][0] == 'X' && board[i][1] == 'X' && board[i][2] == 'X')
         {
-            return 2;
+            return COMPUTER_WIN;
         }
         else if(board[i][0] == 'O' && board[i][1] == 'O' && board[i][2] == 'O')
         {
-            return 1;
+            return PLAYER_WIN;
         }
     }
-    return 0;
+    return TIE;
 }
 
 int isColWin(char board[ROW][COL], int col)
@@ -133,53 +131,52 @@ int isColWin(char board[ROW][COL], int col)
     {
         if(board[0][j] == 'X' && board[1][j] == 'X' && board[2][j] == 'X')
         {
-            return 2;
+            return COMPUTER_WIN;
         }
         else if(board[0][j] == 'O' && board[1][j] == 'O' && board[2][j] == 'O')
         {
-            return 1;
+            return PLAYER_WIN;
         }
     }
-    return 0;
+    return TIE;
 }
 
 int isDiagonalWin(char board[ROW][COL])
 {
     if(board[0][0] == 'X' && board[1][1] == 'X' && board[2][2] == 'X')
     {
-        return 2;
+        return COMPUTER_WIN;
     }
     else if(board[2][0] == 'X' && board[1][1] == 'X' && board[0][2] == 'X')
     {
-        return 2;
+        return COMPUTER_WIN;
     }
     else if(board[0][0] == 'O' && board[1][1] == 'O' && board[2][2] == 'O')
     {
-        return 1;
+        return PLAYER_WIN;
     }
     else if(board[2][0] == 'O' && board[1][1] == 'O' && board[0][2] == 'O')
     {
-        return 1;
+        return PLAYER_WIN;
     }
-    return 0;
+    return TIE;
 }
 
 int isWin(char board[ROW][COL], int row, int col)
 {
     if(isRowWin(board,row) == 1 || isColWin(board,col) == 1 || isDiagonalWin(board) == 1)
     {
-        return 1;
+        return PLAYER_WIN;
     } 
     else if(isRowWin(board,row) == 2 || isColWin(board,col) == 2 || isDiagonalWin(board) == 2)
     {
-        return 2;
+        return COMPUTER_WIN;
     }
     else
     {
-        return 0;
+        return TIE;
     }
 }
-
 
 void menu()
 {
@@ -193,7 +190,7 @@ void playMenu()
 {
     int playerResponse = 0;
 
-    while(playerResponse != 1 && playerResponse != 2)
+    do // do...while
     {
         playerResponse = 0;
         menu();
@@ -211,9 +208,34 @@ void playMenu()
                 printf("\nSorry, I don't understand what you're trying to say\n");
         }
     }
+    while (playerResponse != 1 && playerResponse != 2);
 }
 
-void game()
+int gameEndingCheck(char board[ROW][COL])
+{
+    if(isWin(board,ROW,COL) == 1 || isWin(board,ROW,COL) == 2)
+    {
+        Sleep(750);
+        if(isWin(board,ROW,COL) == 1)
+        {
+            printf("Player won!\n");
+            return 1;
+        }
+        else
+        {
+            printf("Computer won!\n");
+            return 1;
+        }
+    }
+    else if(isDraw(board,ROW,COL) == 1)
+    {
+        Sleep(750);
+        printf("It's a draw!\n");
+        return 1;
+    }
+}
+
+void game() //shorten down with different functions
 {
     playMenu();
     
@@ -235,10 +257,14 @@ void game()
         rowPosition = -1;
         colPosition = -1;
 
-        while(rowPosition < 1 || rowPosition > 3)
+        while(rowPosition < 1 || rowPosition > 3) //add a caution if the player plays a wrong place
         {
             printf("What row would you like to play your piece? ");
             scanf("%d",&rowPosition);
+            if(rowPosition < 1 || rowPosition > 3)
+            {
+                printf("You can't place a piece there!\n");
+            }
         }
 
         Sleep(500);
@@ -246,9 +272,13 @@ void game()
         {
             printf("What column would you like to play your piece? ");
             scanf("%d",&colPosition);
+            if(rowPosition < 1 || rowPosition > 3)
+            {
+                printf("You can't place a piece there!\n");
+            }
         }
 
-        while(board[rowPosition-1][colPosition-1] == 'O' || board[rowPosition-1][colPosition-1] == 'X')
+        while(board[rowPosition-1][colPosition-1] == 'O' || board[rowPosition-1][colPosition-1] == 'X') 
         {
             printf("Sorry a piece is already there!\n");
             rowPosition = -1;
@@ -272,26 +302,8 @@ void game()
         printf("You played:\n");
         Sleep(750);
         displayBoard(board,ROW,COL);
-        if(isWin(board,ROW,COL) == 1 || isWin(board,ROW,COL) == 2)
+        if (gameEndingCheck(board) == 1)
         {
-            win = 1;
-            Sleep(750);
-            if(isWin(board,ROW,COL) == 1)
-            {
-                printf("Player won!\n");
-                break;
-            }
-            else
-            {
-                printf("Computer won!\n");
-                break;
-            }
-        }
-        else if(isDraw(board,ROW,COL) == 1)
-        {
-            draw = 1;
-            Sleep(750);
-            printf("It's a draw!\n");
             break;
         }
         Sleep(1000);
@@ -299,26 +311,8 @@ void game()
         Sleep(750);
         computerPlay(board);
         displayBoard(board,ROW,COL);   
-        if(isWin(board,ROW,COL) == 1 || isWin(board,ROW,COL) == 2)
+        if (gameEndingCheck(board) == 1)
         {
-            win = 1;
-            Sleep(750);
-            if(isWin(board,ROW,COL) == 1)
-            {
-                printf("Player won!\n");
-                break;
-            }
-            else
-            {
-                printf("Computer won!\n");
-                break;
-            }
-        }
-        else if(isDraw(board,ROW,COL) == 1)
-        {
-            draw = 1;
-            Sleep(750);
-            printf("It's a draw!\n");
             break;
         }
     }
