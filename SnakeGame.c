@@ -17,14 +17,25 @@ void CursorJump(int x, int y)
 void DisplayBoard(int GameBoard[ROW][COL], int row, int col)
 {
     int i = 0;
-
+    char strVal = ' ';
     for (i = 0; i < row; i++)
     {
         printf("\n");
         int j = 0;
         for (j = 0; j < col; j++)
         {
-            printf("%d ",GameBoard[i][j]);
+            if (GameBoard[i][j] == 1)
+            {
+                color(224);
+                printf("%c",strVal);
+            }
+            
+            if(GameBoard[i][j] == 0)
+            {
+                color(0);
+                printf("%c",strVal);
+            }
+            // printf("%d ",GameBoard[i][j]);
         }
     }
 }
@@ -56,6 +67,7 @@ void Game()
 
     InitBoard(GameBoard,ROW,COL);
     DisplayBoard(GameBoard,ROW,COL);
+    color(7);
 }
 
 void main()
