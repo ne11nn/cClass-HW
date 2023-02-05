@@ -8,13 +8,13 @@ void color(int c)
 void CursorJump(int x, int y)
 {
 	COORD pos;
-	pos.X = x;
-	pos.Y = y;
+	pos.X = x+1;
+	pos.Y = y+1;
 	HANDLE handle = GetStdHandle(STD_OUTPUT_HANDLE);
 	SetConsoleCursorPosition(handle, pos);
 }
 
-void UpdateBoard(int GameBoard[ROW][COL], int row, int col)
+void DisplayBoard(int GameBoard[ROW][COL], int row, int col)
 {
     system("cls");
     int i = 0;
@@ -56,6 +56,29 @@ void UpdateBoard(int GameBoard[ROW][COL], int row, int col)
     color(7);
 }
 
+void UpdateBoard(int GameBoard[ROW][COL], int row, int col, int xCoord, int yCoord, int item)
+{
+    char strVal = ' ';
+    CursorJump(xCoord, yCoord);
+    printf("\b \b");
+    if (item == APPLE)
+    {
+        color(192);
+        printf("%c",strVal);
+    }
+    else if(item == SNAKEHEAD)
+    {
+        color(96);
+        printf("%c",strVal);
+    }
+    else if(item == SNAKEBODY)
+    {
+        color(162);
+        printf("%c",strVal);
+    }
+    color(7);
+}
+
 void SpawnApple(int GameBoard[ROW][COL], int row, int col)
 {
     int XCoord;
@@ -66,57 +89,10 @@ void SpawnApple(int GameBoard[ROW][COL], int row, int col)
         YCoord = rand() % col;
     } while (GameBoard[XCoord][YCoord] != EMPTY);
     GameBoard[XCoord][YCoord] = APPLE;
-    UpdateBoard(GameBoard, row, col);
+    UpdateBoard(GameBoard,row,col,YCoord,XCoord,APPLE);
 }
 
-void SpawnSnake(int GameBoard[ROW][COL], int row, int col, int StartLength)
-{
-    typedef struct
-    {
-        int XCoord;
-        int YCoord;
-    } SnakeHead;
-
-    typedef struct
-    {
-        int XCoord;
-        int YCoord;
-    } SnakeBody;
-
-    typedef struct
-    {
-        SnakeHead head;
-        SnakeBody body[965];
-        int size;
-        int direction;
-    } Snake;
-
-    int StartingPositionX = row / 2;
-    int StartingPositionY = col / 2;
-
-    SnakeHead SnakeHeadCharacter;
-    SnakeHeadCharacter.XCoord = StartingPositionX;
-    SnakeHeadCharacter.YCoord = StartingPositionY;
-
-    Snake SnakeCharacter;
-    SnakeCharacter.head = SnakeHeadCharacter;
-    SnakeCharacter.size = StartLength;
-    SnakeCharacter.direction = RIGHT;
-
-    int i = 0;
-    for (i = 0; i < SnakeCharacter.size; i++)
-    {
-        SnakeBody TempBody;
-        TempBody.XCoord = StartingPositionX;        
-        TempBody.YCoord = StartingPositionY - i - 1;
-        SnakeCharacter.body[i] = TempBody;
-        GameBoard[TempBody.XCoord][TempBody.YCoord] = SNAKEBODY;
-    }
-    GameBoard[SnakeCharacter.head.XCoord][SnakeCharacter.head.YCoord] = SNAKEHEAD;
-    UpdateBoard(GameBoard,row,col);
-}
-
-void InitBoard(int GameBoard[ROW][COL], int row, int col)
+void InitBoard(int GameBoard[ROW][COL], int row, int col, int SnakeStartLength)
 {
     int i = 0;
 
@@ -135,18 +111,62 @@ void InitBoard(int GameBoard[ROW][COL], int row, int col)
             }
         }
     }
-    UpdateBoard(GameBoard,row,col);
+
+    int StartingPositionX = row / 2;
+    int StartingPositionY = col / 2;
+
+    SnakeHead SnakeHeadCharacter;
+    SnakeHeadCharacter.XCoord = StartingPositionX;
+    SnakeHeadCharacter.YCoord = StartingPositionY;
+
+    Snake SnakeCharacter;
+    SnakeCharacter.head = SnakeHeadCharacter;
+    SnakeCharacter.size = SnakeStartLength;
+    SnakeCharacter.direction = RIGHT;
+    
+    GameBoard[SnakeCharacter.head.XCoord][SnakeCharacter.head.YCoord] = SNAKEHEAD;
+
+    i = 0;
+    for (i = 0; i < SnakeCharacter.size; i++)
+    {
+        SnakeBody TempBody;
+        TempBody.XCoord = StartingPositionX;        
+        TempBody.YCoord = StartingPositionY - i - 1;
+        SnakeCharacter.body[i] = TempBody;
+        GameBoard[TempBody.XCoord][TempBody.YCoord] = SNAKEBODY;
+    }
+
+
+    int XCoord;
+    int YCoord;
+    do
+    {
+        XCoord = rand() % row;
+        YCoord = rand() % col;
+    } while (GameBoard[XCoord][YCoord] != EMPTY);
+    GameBoard[XCoord][YCoord] = APPLE;
 }
 
 void Game()
 {
     int GameBoard[ROW][COL];
 
-    InitBoard(GameBoard,ROW,COL);
-    Sleep(400);
-    SpawnSnake(GameBoard,ROW,COL,3);
+    InitBoard(GameBoard,ROW,COL,3);
+    DisplayBoard(GameBoard,ROW,COL);
     Sleep(400);
     SpawnApple(GameBoard,ROW,COL);
+    CursorJump(1,23);
+
+    // int i = 0;
+    // for (i = 0; i < ROW; i++)
+    // {
+    //     printf("\n");
+    //     int j = 0;
+    //     for (j = 0; j < COL; j++)
+    //     {
+    //         printf("%d",GameBoard[i][j]);
+    //     }
+    // }
 }
 
 void main()

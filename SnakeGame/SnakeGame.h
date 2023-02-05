@@ -15,10 +15,30 @@
 #define ROW 23
 #define COL 42
 
+typedef struct
+{
+    int XCoord;
+    int YCoord;
+} SnakeHead;
+
+typedef struct
+{
+    int XCoord;
+    int YCoord;
+} SnakeBody;
+
+typedef struct
+{
+    SnakeHead head;
+    SnakeBody body[965];
+    int size;
+    int direction;
+} Snake;
+
 void color (int c);
 void CursorJump (int x, int y);
-void InitBoard (int GameBoard[ROW][COL], int row, int col);
-void UpdateBoard (int GameBoard[ROW][COL], int row, int col);
+void InitBoard (int GameBoard[ROW][COL], int row, int col, int SnakeStartLength);
+void DisplayBoard (int GameBoard[ROW][COL], int row, int col);
+void UpdateBoard (int GameBoard[ROW][COL], int row, int col, int xCoord, int yCoord, int item);
 void SpawnApple (int GameBoard[ROW][COL], int row, int col);
-void SpawnSnake (int GameBoard[ROW][COL], int row, int col, int StartLength);
 void Game ();
