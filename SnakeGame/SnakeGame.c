@@ -99,7 +99,7 @@ void SpawnApple()
     UpdateBoard(YCoord,XCoord,APPLE);
 }
 
-void MoveSnake(int dir)
+void MoveSnake(int x, int y)
 {
     GameBoard[snake.head.XCoord][snake.head.YCoord] = EMPTY;
     UpdateBoard(snake.head.YCoord,snake.head.XCoord,EMPTY);
@@ -122,31 +122,36 @@ void MoveSnake(int dir)
     GameBoard[snake.body[0].XCoord][snake.body[0].YCoord] = SNAKEBODY;
     UpdateBoard(snake.body[0].YCoord,snake.body[0].XCoord,SNAKEBODY);
 
-    switch (dir)
-    {
-        case UP:
-            snake.head.XCoord = snake.head.XCoord - 1;
-            break;
+    snake.head.XCoord = snake.head.XCoord + x;
+    snake.head.YCoord = snake.head.YCoord + y;
+
+    // switch (dir)
+    // {
+    //     case UP:
+    //         snake.head.XCoord = snake.head.XCoord - 1;
+    //         break;
         
-        case DOWN:
-            snake.head.XCoord = snake.head.XCoord + 1;
-            break;
+    //     case DOWN:
+    //         snake.head.XCoord = snake.head.XCoord + 1;
+    //         break;
 
-        case LEFT:
-            snake.head.YCoord = snake.head.YCoord - 1;
-            break;
+    //     case LEFT:
+    //         snake.head.YCoord = snake.head.YCoord - 1;
+    //         break;
 
-        case RIGHT:
-            snake.head.YCoord = snake.head.YCoord + 1;
-            break;
-    }
+    //     case RIGHT:
+    //         snake.head.YCoord = snake.head.YCoord + 1;
+    //         break;
+    // }
 
     GameBoard[snake.head.XCoord][snake.head.YCoord] = SNAKEHEAD;
     UpdateBoard(snake.head.YCoord,snake.head.XCoord,SNAKEHEAD);
 }
 
-int HandleInput()
-{
+void HandleInput(int *x, int *y)
+{    
+
+
     if (kbhit())
     {
         int ch = getch();
@@ -155,18 +160,26 @@ int HandleInput()
         {
             case UP:
                 snake.direction = UP;
+                *x = -1;
+                *y = 0;
                 break;
 
             case DOWN:
                 snake.direction = DOWN;
+                *x = 1;
+                *y = 0;
                 break;
 
             case LEFT:
                 snake.direction = LEFT;
+                *x = 0;
+                *y = -1;
                 break;
 
             case RIGHT:
                 snake.direction = RIGHT;
+                *x = 0;
+                *y = 1;
                 break;
         }
     }
@@ -174,10 +187,14 @@ int HandleInput()
 
 void GameLoop()
 {
+    int x, y;
+    x = 0;
+    y = 1;
     while (1)
     {
-        HandleInput();
-        MoveSnake(snake.direction);
+        HandleInput(&x, &y);
+        printf("%d, %d",x,y);
+        MoveSnake(x, y);
         Sleep(250);
     }
 }
