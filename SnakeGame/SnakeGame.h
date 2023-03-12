@@ -39,10 +39,11 @@ typedef struct
 
 void color (int c);
 void CursorJump (int x, int y);
-void InitBoard (int GameBoard[ROW][COL], int row, int col, int SnakeStartLength);
-void DisplayBoard (int GameBoard[ROW][COL], int row, int col);
-void UpdateBoard (int GameBoard[ROW][COL], int row, int col, int xCoord, int yCoord, int item);
-void SpawnApple (int GameBoard[ROW][COL], int row, int col);
-int SnakeMovementInput(int GameBoard[ROW][COL], int row, int col);
-void MoveSnake(int GameBoard[ROW][COL], int row, int col, int dir);
+void InitBoard (int SnakeStartLength);
+void DisplayBoard ();
+void UpdateBoard (int xCoord, int yCoord, int item);
+void SpawnApple ();
+int HandleInput ();
+void MoveSnake (int dir);
+void GameLoop ();
 void Game ();

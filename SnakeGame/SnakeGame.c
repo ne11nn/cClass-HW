@@ -1,6 +1,7 @@
 #include "SnakeGame.h"
 
-Snake SnakeCharacter;
+Snake snake;
+int GameBoard[ROW][COL];
 
 void color(int c)
 {
@@ -16,16 +17,16 @@ void CursorJump(int x, int y)
 	SetConsoleCursorPosition(handle, pos);
 }
 
-void DisplayBoard(int GameBoard[ROW][COL], int row, int col)
+void DisplayBoard()
 {
     system("cls");
     int i = 0;
     char strVal = ' ';
-    for (i = 0; i < row; i++)
+    for (i = 0; i < ROW; i++)
     {
         printf("\n");
         int j = 0;
-        for (j = 0; j < col; j++)
+        for (j = 0; j < COL; j++)
         {
             if (GameBoard[i][j] == WALL)
             {
@@ -58,7 +59,7 @@ void DisplayBoard(int GameBoard[ROW][COL], int row, int col)
     color(7);
 }
 
-void UpdateBoard(int GameBoard[ROW][COL], int row, int col, int xCoord, int yCoord, int item)
+void UpdateBoard(int xCoord, int yCoord, int item)
 {
     char strVal = ' ';
     CursorJump(xCoord-1, yCoord);
@@ -85,111 +86,112 @@ void UpdateBoard(int GameBoard[ROW][COL], int row, int col, int xCoord, int yCoo
     color(7);
 }
 
-void SpawnApple(int GameBoard[ROW][COL], int row, int col)
+void SpawnApple()
 {
     int XCoord;
     int YCoord;
     do
     {
-        XCoord = rand() % row;
-        YCoord = rand() % col;
+        XCoord = rand() % ROW;
+        YCoord = rand() % COL;
     } while (GameBoard[XCoord][YCoord] != EMPTY);
     GameBoard[XCoord][YCoord] = APPLE;
-    UpdateBoard(GameBoard,row,col,YCoord,XCoord,APPLE);
+    UpdateBoard(YCoord,XCoord,APPLE);
 }
 
-void MoveSnake(int GameBoard[ROW][COL], int row, int col, int dir)
+void MoveSnake(int dir)
 {
+    GameBoard[snake.head.XCoord][snake.head.YCoord] = EMPTY;
+    UpdateBoard(snake.head.YCoord,snake.head.XCoord,EMPTY);
 
-    GameBoard[SnakeCharacter.head.XCoord][SnakeCharacter.head.YCoord] = EMPTY;
-    UpdateBoard(GameBoard,row,col,SnakeCharacter.head.YCoord,SnakeCharacter.head.XCoord,EMPTY);
+    GameBoard[snake.body[snake.size-1].XCoord][snake.body[snake.size-1].YCoord] = EMPTY;
+    UpdateBoard(snake.body[snake.size-1].YCoord,snake.body[snake.size-1].XCoord,EMPTY);
 
-    int i = SnakeCharacter.size;
+    int i = snake.size;
 
-    // for (i = SnakeCharacter.size; i > 1; i--)
-    // {
-    //     GameBoard[SnakeCharacter.body[i-1].XCoord][SnakeCharacter.body[i-1].YCoord] = EMPTY;
-    //     UpdateBoard(GameBoard,row,col,SnakeCharacter.body[i-1].YCoord,SnakeCharacter.body[i-1].XCoord,EMPTY);
-    //     SnakeCharacter.body[i-1].XCoord = SnakeCharacter.body[i-2].XCoord;
-    //     SnakeCharacter.body[i-1].YCoord = SnakeCharacter.body[i-2].YCoord;
-    //     GameBoard[SnakeCharacter.body[i-1].XCoord][SnakeCharacter.body[i-1].YCoord] = SNAKEBODY;
-    //     UpdateBoard(GameBoard,row,col,SnakeCharacter.body[i-1].YCoord,SnakeCharacter.body[i-1].XCoord,SNAKEBODY);
-    // }
+    for (i = snake.size; i > 1; i--)
+    {
+        snake.body[i-1].XCoord = snake.body[i-2].XCoord;
+        snake.body[i-1].YCoord = snake.body[i-2].YCoord;
+        GameBoard[snake.body[i-1].XCoord][snake.body[i-1].YCoord] = SNAKEBODY;
+        UpdateBoard(snake.body[i-1].YCoord,snake.body[i-1].XCoord,SNAKEBODY);
+    }
 
-    GameBoard[SnakeCharacter.body[0].XCoord][SnakeCharacter.body[0].YCoord] = EMPTY;
-    UpdateBoard(GameBoard,row,col,SnakeCharacter.body[0].YCoord,SnakeCharacter.body[0].XCoord,EMPTY);
-    SnakeCharacter.body[0].XCoord = SnakeCharacter.head.XCoord;
-    SnakeCharacter.body[0].YCoord = SnakeCharacter.head.YCoord;
-    GameBoard[SnakeCharacter.body[0].XCoord][SnakeCharacter.body[0].YCoord] = SNAKEBODY;
-    UpdateBoard(GameBoard,row,col,SnakeCharacter.body[0].YCoord,SnakeCharacter.body[0].XCoord,SNAKEBODY);
+    snake.body[0].XCoord = snake.head.XCoord;
+    snake.body[0].YCoord = snake.head.YCoord;
+    GameBoard[snake.body[0].XCoord][snake.body[0].YCoord] = SNAKEBODY;
+    UpdateBoard(snake.body[0].YCoord,snake.body[0].XCoord,SNAKEBODY);
 
     switch (dir)
     {
         case UP:
-            SnakeCharacter.head.XCoord = SnakeCharacter.head.XCoord - 1;
+            snake.head.XCoord = snake.head.XCoord - 1;
             break;
         
         case DOWN:
-            SnakeCharacter.head.XCoord = SnakeCharacter.head.XCoord + 1;
+            snake.head.XCoord = snake.head.XCoord + 1;
             break;
 
         case LEFT:
-            SnakeCharacter.head.YCoord = SnakeCharacter.head.YCoord - 1;
+            snake.head.YCoord = snake.head.YCoord - 1;
             break;
 
         case RIGHT:
-            SnakeCharacter.head.YCoord = SnakeCharacter.head.YCoord + 1;
+            snake.head.YCoord = snake.head.YCoord + 1;
             break;
     }
 
-    GameBoard[SnakeCharacter.head.XCoord][SnakeCharacter.head.YCoord] = SNAKEHEAD;
-    UpdateBoard(GameBoard,row,col,SnakeCharacter.head.YCoord,SnakeCharacter.head.XCoord,SNAKEHEAD);
+    GameBoard[snake.head.XCoord][snake.head.YCoord] = SNAKEHEAD;
+    UpdateBoard(snake.head.YCoord,snake.head.XCoord,SNAKEHEAD);
 }
 
-int SnakeMovementInput(int GameBoard[ROW][COL], int row, int col)
+int HandleInput()
 {
-    while (1)
+    if (kbhit())
     {
         int ch = getch();
 
         switch (ch)
         {
             case UP:
-                SnakeCharacter.direction = UP;
-                MoveSnake(GameBoard,row,col,UP);
+                snake.direction = UP;
                 break;
 
             case DOWN:
-                SnakeCharacter.direction = DOWN;
-                MoveSnake(GameBoard,row,col,DOWN);
+                snake.direction = DOWN;
                 break;
 
             case LEFT:
-                SnakeCharacter.direction = LEFT;
-                MoveSnake(GameBoard,row,col,LEFT);
+                snake.direction = LEFT;
                 break;
 
             case RIGHT:
-                SnakeCharacter.direction = RIGHT;
-                MoveSnake(GameBoard,row,col,RIGHT);
+                snake.direction = RIGHT;
                 break;
-
-            case ESCAPE:
-                return 0;
         }
     }
 }
 
-void InitBoard(int GameBoard[ROW][COL], int row, int col, int SnakeStartLength)
+void GameLoop()
+{
+    while (1)
+    {
+        HandleInput();
+        MoveSnake(snake.direction);
+        Sleep(250);
+    }
+}
+
+void InitBoard(int SnakeStartLength)
 {
     int i = 0;
 
-    for (i = 0; i < row; i++)
+    for (i = 0; i < ROW; i++)
     {
         int j = 0;
-        for (j = 0; j < col; j++)
+        for (j = 0; j < COL; j++)
         {
-            if (i == 0 || i == row - 1 || j == 0 || j == col - 1)
+            if (i == 0 || i == ROW - 1 || j == 0 || j == COL - 1)
             {
                 GameBoard[i][j] = WALL;
             }
@@ -200,26 +202,26 @@ void InitBoard(int GameBoard[ROW][COL], int row, int col, int SnakeStartLength)
         }
     }
 
-    int StartingPositionX = row / 2;
-    int StartingPositionY = col / 2;
+    int StartingPositionX = ROW / 2;
+    int StartingPositionY = COL / 2;
 
     SnakeHead SnakeHeadCharacter;
     SnakeHeadCharacter.XCoord = StartingPositionX;
     SnakeHeadCharacter.YCoord = StartingPositionY;
 
-    SnakeCharacter.head = SnakeHeadCharacter;
-    SnakeCharacter.size = SnakeStartLength;
-    SnakeCharacter.direction = RIGHT;
+    snake.head = SnakeHeadCharacter;
+    snake.size = SnakeStartLength;
+    snake.direction = RIGHT;
     
-    GameBoard[SnakeCharacter.head.XCoord][SnakeCharacter.head.YCoord] = SNAKEHEAD;
+    GameBoard[snake.head.XCoord][snake.head.YCoord] = SNAKEHEAD;
 
     i = 0;
-    for (i = 0; i < SnakeCharacter.size; i++)
+    for (i = 0; i < snake.size; i++)
     {
         SnakeBody TempBody;
         TempBody.XCoord = StartingPositionX;        
         TempBody.YCoord = StartingPositionY - i - 1;
-        SnakeCharacter.body[i] = TempBody;
+        snake.body[i] = TempBody;
         GameBoard[TempBody.XCoord][TempBody.YCoord] = SNAKEBODY;
     }
 
@@ -227,8 +229,8 @@ void InitBoard(int GameBoard[ROW][COL], int row, int col, int SnakeStartLength)
     int YCoord;
     do
     {
-        XCoord = rand() % row;
-        YCoord = rand() % col;
+        XCoord = rand() % ROW;
+        YCoord = rand() % COL;
     } while (GameBoard[XCoord][YCoord] != EMPTY);
     GameBoard[XCoord][YCoord] = APPLE;
 }
@@ -238,11 +240,11 @@ void Game()
     int GameBoard[ROW][COL];
 
     
-    InitBoard(GameBoard,ROW,COL,3);
-    DisplayBoard(GameBoard,ROW,COL);
+    InitBoard(3);
+    DisplayBoard();
     Sleep(400);
-    SpawnApple(GameBoard,ROW,COL);
-    SnakeMovementInput(GameBoard,ROW,COL);
+    SpawnApple();
+    GameLoop();
     
     CursorJump(1,23);
 
