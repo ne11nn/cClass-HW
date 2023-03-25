@@ -33,6 +33,7 @@ typedef struct
 {
     SnakeHead head;
     SnakeBody body[965];
+    int score;
     int size;
     int direction;
 } Snake;
@@ -44,6 +45,7 @@ void DisplayBoard ();
 void UpdateBoard (int xCoord, int yCoord, int item);
 void SpawnApple ();
 void HandleInput (int *x, int *y);
+void JudgeMovement (int x, int y);
 void MoveSnake (int x, int y);
 void GameLoop ();
 void Game ();

@@ -150,8 +150,6 @@ void MoveSnake(int x, int y)
 
 void HandleInput(int *x, int *y)
 {    
-
-
     if (kbhit())
     {
         int ch = getch();
@@ -159,6 +157,7 @@ void HandleInput(int *x, int *y)
         switch (ch)
         {
             case UP:
+                // if (snake.direction != DOWN)
                 snake.direction = UP;
                 *x = -1;
                 *y = 0;
@@ -185,6 +184,26 @@ void HandleInput(int *x, int *y)
     }
 }
 
+void JudgeMovement(int x, int y)
+{
+    switch (GameBoard[snake.head.XCoord + x][snake.head.YCoord + y])
+    {
+        case APPLE:
+            snake.size += 1;
+            GameBoard[snake.head.XCoord + x][snake.head.YCoord + y] = EMPTY;
+            SpawnApple();
+            break;
+
+        case WALL:
+            GameBoard[snake.head.XCoord][snake.head.YCoord] = EMPTY;
+            UpdateBoard(snake.head.YCoord, snake.head.XCoord, EMPTY);
+            break;
+
+        // case SNAKEBODY:
+
+    }
+}
+
 void GameLoop()
 {
     int x, y;
@@ -193,7 +212,7 @@ void GameLoop()
     while (1)
     {
         HandleInput(&x, &y);
-        printf("%d, %d",x,y);
+        JudgeMovement(x, y);
         MoveSnake(x, y);
         Sleep(250);
     }
@@ -229,6 +248,7 @@ void InitBoard(int SnakeStartLength)
     snake.head = SnakeHeadCharacter;
     snake.size = SnakeStartLength;
     snake.direction = RIGHT;
+    snake.score = 0;
     
     GameBoard[snake.head.XCoord][snake.head.YCoord] = SNAKEHEAD;
 
@@ -260,7 +280,6 @@ void Game()
     InitBoard(3);
     DisplayBoard();
     Sleep(400);
-    SpawnApple();
     GameLoop();
     
     CursorJump(1,23);
