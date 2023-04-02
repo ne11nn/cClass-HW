@@ -186,18 +186,43 @@ void HandleInput(int *x, int *y)
 
 void JudgeMovement(int x, int y)
 {
+    int i = 0;
+    int j = 0;
+    char result;
     switch (GameBoard[snake.head.XCoord + x][snake.head.YCoord + y])
     {
         case APPLE:
-            snake.size += 1;
             GameBoard[snake.head.XCoord + x][snake.head.YCoord + y] = EMPTY;
+            snake.size += 1;
             SpawnApple();
             break;
 
         case WALL:
-            GameBoard[snake.head.XCoord][snake.head.YCoord] = EMPTY;
-            UpdateBoard(snake.head.YCoord, snake.head.XCoord, EMPTY);
-            break;
+            for (i = 0; i < ROW; i++)
+            {
+                for (j = 0; j < COL; j++)
+                {
+                    UpdateBoard(j, i, EMPTY);
+                }
+            }
+            Sleep(350);
+            CursorJump(15, 12);
+            printf("GAME OVER");
+            CursorJump(15,13);
+            printf("PLAY AGAIN? [y/n]: ");
+            scanf("%c", &result);
+            
+            if (result == 'y')
+            {
+                result = 'o';
+                Game();
+                break;
+            }
+            else
+            {
+                exit(1);
+                break;
+            }
 
         // case SNAKEBODY:
 
@@ -215,6 +240,16 @@ void GameLoop()
         JudgeMovement(x, y);
         MoveSnake(x, y);
         Sleep(250);
+        // int i = 0;
+        // for (i = 0; i < ROW; i++)
+        // {
+        //     printf("\n");
+        //     int j = 0;
+        //     for (j = 0; j < COL; j++)
+        //     {
+        //         printf("%d",GameBoard[i][j]);
+        //     }
+        // }
     }
 }
 
@@ -274,8 +309,9 @@ void InitBoard(int SnakeStartLength)
 
 void Game()
 {
-    int GameBoard[ROW][COL];
+    system("cls");
 
+    int GameBoard[ROW][COL];
     
     InitBoard(3);
     DisplayBoard();
@@ -283,17 +319,6 @@ void Game()
     GameLoop();
     
     CursorJump(1,23);
-
-    // int i = 0;
-    // for (i = 0; i < ROW; i++)
-    // {
-    //     printf("\n");
-    //     int j = 0;
-    //     for (j = 0; j < COL; j++)
-    //     {
-    //         printf("%d",GameBoard[i][j]);
-    //     }
-    // }
 }
 
 void main()
