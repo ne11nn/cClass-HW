@@ -2,6 +2,7 @@
 
 Snake snake;
 int GameBoard[ROW][COL];
+int highscore;
 
 void color(int c)
 {
@@ -57,6 +58,7 @@ void DisplayBoard()
         }
     }
     color(7);
+    printf("\nScore: 0              Highscore: %d", highscore);
 }
 
 void UpdateBoard(int xCoord, int yCoord, int item)
@@ -157,29 +159,40 @@ void HandleInput(int *x, int *y)
         switch (ch)
         {
             case UP:
-                // if (snake.direction != DOWN)
-                snake.direction = UP;
-                *x = -1;
-                *y = 0;
-                break;
+                if (snake.direction != DOWN)
+                {
+                    snake.direction = UP;
+                    *x = -1;
+                    *y = 0;
+                    break;
+                }
 
             case DOWN:
-                snake.direction = DOWN;
-                *x = 1;
-                *y = 0;
-                break;
+                if (snake.direction != UP)
+                {
+                    snake.direction = DOWN;
+                    *x = 1;
+                    *y = 0;
+                    break;
+                }
 
             case LEFT:
-                snake.direction = LEFT;
-                *x = 0;
-                *y = -1;
-                break;
+                if (snake.direction != RIGHT)
+                {
+                    snake.direction = LEFT;
+                    *x = 0;
+                    *y = -1;
+                    break;
+                }
 
             case RIGHT:
-                snake.direction = RIGHT;
-                *x = 0;
-                *y = 1;
-                break;
+                if (snake.direction != LEFT)
+                {
+                    snake.direction = RIGHT;
+                    *x = 0;
+                    *y = 1;
+                    break; 
+                }
         }
     }
 }
@@ -194,6 +207,12 @@ void JudgeMovement(int x, int y)
         case APPLE:
             GameBoard[snake.head.XCoord + x][snake.head.YCoord + y] = EMPTY;
             snake.size += 1;
+            IncreaseScore();
+            if (snake.score > highscore)
+            {
+                highscore = snake.score;
+                UpdateHighScore();
+            }
             SpawnApple();
             break;
 
@@ -210,7 +229,8 @@ void JudgeMovement(int x, int y)
             printf("GAME OVER");
             CursorJump(15,13);
             printf("PLAY AGAIN? [y/n]: ");
-            scanf("%c", &result);
+            result = getchar();
+            getchar();
             
             if (result == 'y')
             {
@@ -224,8 +244,33 @@ void JudgeMovement(int x, int y)
                 break;
             }
 
-        // case SNAKEBODY:
-
+        case SNAKEBODY:
+            for (i = 0; i < ROW; i++)
+            {
+                for (j = 0; j < COL; j++)
+                {
+                    UpdateBoard(j, i, EMPTY);
+                }
+            }
+            Sleep(350);
+            CursorJump(15, 12);
+            printf("GAME OVER");
+            CursorJump(15,13);
+            printf("PLAY AGAIN? [y/n]: ");
+            result = getchar();
+            getchar();
+            
+            if (result == 'y')
+            {
+                result = 'o';
+                Game();
+                break;
+            }
+            else
+            {
+                exit(1);
+                break;
+            }
     }
 }
 
@@ -307,12 +352,40 @@ void InitBoard(int SnakeStartLength)
     GameBoard[XCoord][YCoord] = APPLE;
 }
 
+void GetHighScore()
+{
+    FILE *fp = NULL;
+
+    fp = fopen("D:/Coding/C/cClass/SnakeGame/scoreinfo.txt", "r");
+    fscanf(fp, "%d", &highscore);
+    fclose(fp);
+}
+
+void UpdateHighScore()
+{
+    CursorJump(32,23);
+    printf("%d",highscore);
+    FILE *fp = NULL;
+
+    fp = fopen("D:/Coding/C/cClass/SnakeGame/scoreinfo.txt", "w+");
+    fprintf(fp, "%d", highscore);
+    fclose(fp);
+}
+
+void IncreaseScore()
+{
+    snake.score += 10;
+    CursorJump(6,23);
+    printf("%d",snake.score);
+}
+
 void Game()
 {
     system("cls");
 
     int GameBoard[ROW][COL];
     
+    GetHighScore();
     InitBoard(3);
     DisplayBoard();
     Sleep(400);

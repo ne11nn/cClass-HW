@@ -47,5 +47,8 @@ void SpawnApple ();
 void HandleInput (int *x, int *y);
 void JudgeMovement (int x, int y);
 void MoveSnake (int x, int y);
+void GetHighScore ();
+void UpdateHighScore ();
+void IncreaseScore ();
 void GameLoop ();
 void Game ();
