@@ -1,17 +1,36 @@
 #include <stdio.h>
+#include <windows.h>
+#include <time.h>
 
 #define FALSE 0
 #define TRUE 1
+
+#define ROW 43
+#define COL 65
 
 #define UP 1
 #define DOWN 2
 #define LEFT 3
 #define RIGHT 4
+
+// Game Objects
+#define REGWALL 1
+#define REINWALL 2
+#define POWERWALL 3
+#define WATER 4
+#define TREE 5
+#define PTANK 6
+#define HOME 7
+#define ETANK 8
+#define BULLET 9
+#define POWERUP 10
+
 // MyTank category: M at the start
 #define MREGULAR 0
 #define MAGILITY 1
 #define MATTACK 2
 #define MDEFENSE 3
+
 // EnemyTank category: E at the start
 #define EREGULAR 0
 #define EAGILITY 1
@@ -19,6 +38,7 @@
 #define EATTACK 3
 #define EWATER 4
 #define EEXPLOSIVE 5
+
 // Powerup category: P at the start
 #define PSCORE 0
 #define PSPEED 1
@@ -30,7 +50,6 @@
 #define PLIFE 7
 #define PSHIELD 8
 #define PVISION 9
-
 
 // tank shapes
 char* tank_figure[4][3][4]=
@@ -57,8 +76,16 @@ char* tank_figure[4][3][4]=
   }
 };
 
+// global variables
+int highscore;
+
+int numTanks[6];
+
+int gameBoard[ROW][COL];
+
 // structure definitions
 
+// MyTank
 typedef struct
 {
     char username[100];
@@ -80,6 +107,7 @@ typedef struct
 
 } MyTank;
 
+// EnemyTank
 typedef struct
 {
     char tankName[50];
@@ -98,6 +126,7 @@ typedef struct
 
 } EnemyTank;
 
+// Landscape
 typedef struct
 {
     char description[100];
@@ -110,6 +139,7 @@ typedef struct
 
 } Landscape;
 
+// Powerup
 typedef struct
 {
     char description[100];
@@ -120,3 +150,7 @@ typedef struct
     float duration;
     
 } Powerup;
+
+void getHighScore ();
+void initiateMap (int mapNumber);
+void game ();
