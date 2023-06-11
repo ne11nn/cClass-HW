@@ -6,7 +6,7 @@
 #define TRUE 1
 
 #define ROW 43
-#define COL 65
+#define COL 43
 
 #define UP 1
 #define DOWN 2
@@ -14,6 +14,7 @@
 #define RIGHT 4
 
 // Game Objects
+#define EMPTY 0
 #define REGWALL 1
 #define REINWALL 2
 #define POWERWALL 3
@@ -79,7 +80,14 @@ char* tank_figure[4][3][4]=
 // global variables
 int highscore;
 
-int numTanks[6];
+int numTanks[6]; /* number of enemy tanks alive for each enemy tank type
+Index 0: Regular
+Index 1: Agility
+Index 2: Defense
+Index 3: Attack
+Index 4: Water
+Index 5: Explosive
+*/ 
 
 int gameBoard[ROW][COL];
 
@@ -151,6 +159,8 @@ typedef struct
     
 } Powerup;
 
-void getHighScore ();
+void GoToxy (int x, int y);
+void getHighScore (); 
 void initiateMap (int mapNumber);
+void displayMap ();
 void game ();
