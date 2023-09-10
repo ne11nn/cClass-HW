@@ -13,18 +13,21 @@
 #define LEFT 3
 #define RIGHT 4
 
-// Game Objects
+// Environmental Objects
 #define EMPTY 0
 #define REGWALL 1
-#define REINWALL 2
-#define POWERWALL 3
-#define WATER 4
-#define TREE 5
-#define PTANK 6
+#define OUTERWALL 2
+#define REINWALL 3
+#define POWERWALL 4
+#define WATER 5
+#define TREE 6
 #define HOME 7
-#define ETANK 8
-#define BULLET 9
-#define POWERUP 10
+
+// Interactive Objects
+#define PTANK 1
+#define ETANK 2
+#define BULLET 3
+#define POWERUP 4
 
 // MyTank category: M at the start
 #define MREGULAR 0
@@ -79,6 +82,7 @@ char* tank_figure[4][3][4]=
 
 // global variables
 int highscore;
+int score = 0;
 
 int numTanks[6]; /* number of enemy tanks alive for each enemy tank type
 Index 0: Regular
@@ -88,8 +92,10 @@ Index 3: Attack
 Index 4: Water
 Index 5: Explosive
 */ 
+int tanksRemaining;
 
 int gameBoard[ROW][COL];
+int playerTankType = -1;
 
 // structure definitions
 
@@ -159,8 +165,8 @@ typedef struct
     
 } Powerup;
 
-void GoToxy (int x, int y);
-void getHighScore (); 
+void getHighScore ();
+void GoToxy (int x, int y); 
 void initiateMap (int mapNumber);
 void displayMap ();
 void game ();

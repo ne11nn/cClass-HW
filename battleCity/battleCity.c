@@ -46,6 +46,13 @@ void initiateMap(int mapNumber)
         //printf("%d\n", numTanks[i]);
     }
 
+    int length = sizeof(numTanks)/sizeof(numTanks[0]);    
+    
+    for (int i = 0; i < length; i++)
+    {
+        tanksRemaining += numTanks[i];
+    }
+
     for (int i = 0; i < ROW; i++)
     {
         for (int j = 0; j < COL; j++)
@@ -59,7 +66,7 @@ void initiateMap(int mapNumber)
     fclose(fp);
 }
 
-void displayMap()
+void displayMap(int mapNumber)
 {
     char strVal = ' ';
     for (int i = 0; i < ROW; i++)
@@ -74,13 +81,27 @@ void displayMap()
 				    printf("▓▓"); 
                     break;
 
-                case REINWALL:
+                case OUTERWALL:
                     SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE),FOREGROUND_INTENSITY|FOREGROUND_GREEN
 					    |FOREGROUND_RED|FOREGROUND_BLUE|BACKGROUND_GREEN|BACKGROUND_RED|BACKGROUND_BLUE);
                     SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE),FOREGROUND_INTENSITY|FOREGROUND_GREEN
 					    |FOREGROUND_RED|FOREGROUND_BLUE|BACKGROUND_GREEN|BACKGROUND_RED|BACKGROUND_BLUE);
 				    GoToxy(2*j,i);
 				    printf("■■");
+                    break;
+
+                case REINWALL:
+                    SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE),FOREGROUND_GREEN|FOREGROUND_BLUE|FOREGROUND_RED
+                        |BACKGROUND_GREEN|BACKGROUND_BLUE|BACKGROUND_RED);
+                    GoToxy(2*j,i);
+				    printf("■■");
+                    break;
+
+                case HOME:
+                    SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE),FOREGROUND_RED
+                        |BACKGROUND_RED);
+                    GoToxy(2*j,i);
+                    printf("■■");
                     break;
 
                 case EMPTY:
@@ -92,13 +113,50 @@ void displayMap()
             }
         }
     }
+
+    GoToxy(COL*2 + 2,3);
+    printf("Level: %d", mapNumber);
+    GoToxy(COL*2 + 2, 8);
+    printf("Score: %d", score);
+    GoToxy(COL*2 + 2, 13);
+    printf("Tanks Left: %d", tanksRemaining);
+    GoToxy(COL*2 + 2, 18);
+    printf("Controls:");
+}
+
+void startScreen()
+{
+    GoToxy(30,15);
+    printf("Battle City");
+    GoToxy(28,16);
+    printf("Choose your tank");
+    GoToxy(15,20);
+    printf("Normal: A regular tank that has no special traits - 1");
+    GoToxy(15,21);
+    printf("Agility: A tank that has faster speed but less lives - 2");
+    GoToxy(15,22);
+    printf("Attack: A tank that has a little more speed, more damage but less health and lives - 3");
+    GoToxy(15,23);
+    printf("Defense: A tank that's slow and has more damage and has more health - 4");
+
+    int n = 0; // how many times player fails to type a number 1 - 4
+    while (playerTankType != 1 && playerTankType != 2 && playerTankType != 3 && playerTankType != 4)
+    {
+        GoToxy(15,24 + n);
+        printf("Pick your tank by typing in a number (1 - 4): ");
+        scanf("%d",&playerTankType);
+        n += 1;
+    }
+    Sleep(1000);
+    system("cls");
 }
 
 void game()
 {
     initiateMap(1);
     printf("\n");
-    displayMap();
+    startScreen();
+    displayMap(1);
 }
 
 void main()
@@ -108,4 +166,5 @@ void main()
     srand(time(NULL));
     game();
     SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 7);
+    GoToxy(COL*2,ROW);
 }
