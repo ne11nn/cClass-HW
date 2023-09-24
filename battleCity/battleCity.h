@@ -93,9 +93,9 @@ Index 4: Water
 Index 5: Explosive
 */ 
 int tanksRemaining;
+int originalTanks;
 
 int gameBoard[ROW][COL];
-int playerTankType = -1;
 
 // structure definitions
 
@@ -104,19 +104,16 @@ typedef struct
 {
     char username[100];
     char tankeName[50];
+    int x;
+    int y;
     int type; 
-    int color; // color value wanted
     int shape; // (0, 1, 2, 3) based off tank_figure var
     int direction;
     int speed;
     int bulletPower;
-    int bulletDestruction;
     int bulletSpeed;
-    int bulletReloadTime;
     int health;
     int lives;
-    int score;
-    int kill;
     int activePowerup;
 
 } MyTank;
@@ -168,5 +165,6 @@ typedef struct
 void getHighScore ();
 void GoToxy (int x, int y); 
 void initiateMap (int mapNumber);
-void displayMap ();
+void displayMap (int mapNumber);
+void startScreen ();
 void game ();
