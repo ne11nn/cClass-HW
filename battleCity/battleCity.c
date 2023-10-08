@@ -331,6 +331,8 @@ void gameLoop()
                 tankType = rand() %1;
             }
 
+            numTanks[tankType] -= 1;
+
             // create enemytank object
 
             tank1.y = 3;
