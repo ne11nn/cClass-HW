@@ -2,6 +2,10 @@
 
 MyTank myTank;
 
+EnemyTank tank1;
+EnemyTank tank2;
+EnemyTank tank3;
+
 void getHighScore()
 {
     FILE *fp = NULL;
@@ -26,14 +30,25 @@ void printTank(MyTank tank)
     for (int i = 0; i < 3; i++)
     {
         GoToxy((tank.x-1)*2, tank.y-1+i);
-        printf("%s", tankF[i][tank.direction-1]);
-        // for (int j = 0; j < 3; j++)
-        // {
-        //     if (tank.my)
-        //         gameBoard[tank.y+j-1][tank.x+i-1] = 200;
-        //     else   
-        //         gameBoard[tank.y+j-1][tank.x+i-1] = 100+tank.num;
-        // }
+        printf("%s", tankF[i][tank.direction]);
+        for (int j = 0; j < 3; j++)
+        {
+            gameBoard[tank.y+j-1][tank.x+i-1] = PTANK;
+        }
+    }
+}
+
+void printEnemyTank(EnemyTank tank)
+{
+    char *(*tankF)[4] = tank_figure[tank.shape];
+    for (int i = 0; i < 3; i++)
+    {
+        GoToxy((tank.x-1)*2, tank.y-1+i);
+        printf("%s", tankF[i][tank.direction]);
+        for (int j = 0; j < 3; j++)
+        {
+            gameBoard[tank.y+j-1][tank.x+i-1] = ETANK;
+        }
     }
 }
 
@@ -85,7 +100,7 @@ void initiateMap(int mapNumber)
 
     fclose(fp);
 
-    myTank.x = COL/2;
+    myTank.x = COL/2 + 1;
     myTank.y = 30;
     myTank.shape = myTank.type - 1;
     myTank.direction = 0;
@@ -197,35 +212,31 @@ void startScreen()
     printf("Choose your tank");
     GoToxy(15,20);
     printf("Normal: A regular tank that has no special traits - 1");
-    GoToxy(15,22);
     for (int i = 0; i < 3; i++)
     {
-        printf("%s", tank_figure[0][i][0]);
         GoToxy(15,22+i);
+        printf("%s", tank_figure[0][i][0]);
     }
-    GoToxy(15,25);
+    GoToxy(15,26);
     printf("Agility: A tank that has faster speed but less lives - 2");
-    GoToxy(15,28);
     for (int i = 0; i < 3; i++)
     {
-        printf("%s", tank_figure[1][i][0]);
         GoToxy(15,28+i);
+        printf("%s", tank_figure[1][i][0]);
     }
-    GoToxy(15,30);
-    printf("Attack: A tank that has a little more speed, more damage but less health and lives - 3");
     GoToxy(15,32);
+    printf("Attack: A tank that has a little more speed, more damage but less health and lives - 3");
     for (int i = 0; i < 3; i++)
     {
+        GoToxy(15,34+i);
         printf("%s", tank_figure[2][i][0]);
-        GoToxy(15,32+i);
     }
-    GoToxy(15,35);
+    GoToxy(15,38);
     printf("Defense: A tank that's slow and has more damage and has more health - 4");
-    GoToxy(15,37);
     for (int i = 0; i < 3; i++)
     {
+        GoToxy(15,40+i);
         printf("%s", tank_figure[3][i][0]);
-        GoToxy(15,37+i);
     }
 
     myTank.type = -1;
@@ -233,40 +244,108 @@ void startScreen()
     int n = 0; // how many times player fails to type a number 1 - 4
     while (myTank.type != 1 && myTank.type != 2 && myTank.type != 3 && myTank.type != 4)
     {
-        GoToxy(15,40 + n);
+        GoToxy(15,44 + n);
         printf("Pick your tank by typing in a number (1 - 4): ");
         scanf("%d",&myTank.type);
         n += 1;
-    }
-
-    switch (myTank.type)
-    {
-        case 1:
-            myTank.lives = 4;
-            break;
-        
-        case 2:
-            myTank.lives = 3;
-            break;
-
-        case 3:
-            myTank.lives = 3;
-            break;
-        
-        case 4:
-            myTank.lives = 4;
-            break;
     }
 
     Sleep(500);
     system("cls");
 }
 
+void moveTank(int x, int y)
+{
+    char empty = ' ';
+    for (int i = 0; i < 3; i++)
+    {
+        GoToxy((myTank.x-1)*2, myTank.y-1+i);
+        printf("%s",empty);
+        for (int j = 0; j < 3; j++)
+        {
+            gameBoard[myTank.y+j-1][myTank.x+i-1] = EMPTY;
+        }
+    }
+
+    myTank.y += y;
+    myTank.x += x;
+
+    printTank(myTank);
+}
+
+void getInput(int *x, int *y)
+{
+    if (kbhit())
+    {
+        int ch = getch();
+        
+        switch (ch)
+        {
+            case UPKEY:
+                myTank.direction = UP;
+                *x = -1;
+                *y = 0;
+                break;
+
+            case DOWNKEY:
+                myTank.direction = DOWN;
+                *x = 1;
+                *y = 0;
+                break;
+
+            case LEFTKEY:
+                myTank.direction = LEFT;
+                *x = 0;
+                *y = -1;
+                break;
+
+            case RIGHTKEY:
+                myTank.direction = RIGHT;
+                *x = 0;
+                *y = 1;
+                break;
+        }
+    }
+}
+
+void gameLoop()
+{
+    int x, y;
+    int tankType;
+    x = 0;
+    y = 0;
+    while (1)
+    {
+        getInput(&x, &y);
+        if (x != 0 || y != 0)
+        {
+            moveTank(x, y);
+            Sleep(50);
+        }
+
+        if (tanksOnField < 3)
+        {
+            tankType = rand() % 1;
+            while (numTanks[tankType] < 0)
+            {
+                tankType = rand() %1;
+            }
+
+            // create enemytank object
+
+            tank1.y = 3;
+            tank1.x = rand() % COL;
+
+            printEnemyTank(tank1);
+        }
+    }
+}
 void game()
 {
     startScreen();
     initiateMap(1);
     displayMap(1);
+    gameLoop();
 }
 
 void main()

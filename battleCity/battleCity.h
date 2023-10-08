@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <windows.h>
 #include <time.h>
+#include <conio.h>
+#include <stdlib.h>
 
 #define FALSE 0
 #define TRUE 1
@@ -8,10 +10,15 @@
 #define ROW 43
 #define COL 43
 
-#define UP 1
-#define DOWN 2
-#define LEFT 3
-#define RIGHT 4
+#define UP 0
+#define DOWN 1
+#define LEFT 2
+#define RIGHT 3
+
+#define UPKEY 72
+#define DOWNKEY 80
+#define LEFTKEY 75
+#define RIGHTKEY 77
 
 // Environmental Objects
 #define EMPTY 0
@@ -24,10 +31,10 @@
 #define HOME 7
 
 // Interactive Objects
-#define PTANK 1
-#define ETANK 2
-#define BULLET 3
-#define POWERUP 4
+#define PTANK 8
+#define ETANK 9
+#define BULLET 10
+#define POWERUP 11
 
 // MyTank category: M at the start
 #define MREGULAR 0
@@ -94,6 +101,7 @@ Index 5: Explosive
 */ 
 int tanksRemaining;
 int originalTanks;
+int tanksOnField = 0;
 
 int gameBoard[ROW][COL];
 
@@ -122,6 +130,8 @@ typedef struct
 typedef struct
 {
     char tankName[50];
+    int x;
+    int y;
     int type;
     int color; // color value wanted
     int shape; // (0, 1, 2, 3) based off tank_figure var
@@ -163,8 +173,12 @@ typedef struct
 } Powerup;
 
 void getHighScore ();
+void printTank (MyTank tank);
 void GoToxy (int x, int y); 
 void initiateMap (int mapNumber);
 void displayMap (int mapNumber);
 void startScreen ();
+void moveTank (int x, int y);
+void getInput (int *x, int *y);
+void gameLoop ();
 void game ();
