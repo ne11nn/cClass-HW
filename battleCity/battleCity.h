@@ -173,7 +173,10 @@ typedef struct
 } Powerup;
 
 void getHighScore ();
+void moveEnemyTank (EnemyTank *tank);
+void hideCursor (int on);
 void printTank (MyTank tank);
+void printEnemyTank (EnemyTank tank);
 void GoToxy (int x, int y); 
 void initiateMap (int mapNumber);
 void displayMap (int mapNumber);
