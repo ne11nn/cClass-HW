@@ -296,7 +296,7 @@ void moveEnemyTank(EnemyTank *tank)
     char empty = ' ';
     int y, x;
 
-    int direction = rand() % 3;
+    int direction = rand() % 4;
 
     switch (direction)
     {
@@ -323,18 +323,18 @@ void moveEnemyTank(EnemyTank *tank)
     
     for (int i = 0; i < 3; i++)
     {
-        GoToxy((tank.x-1)*2, tank.y-1+i);
+        GoToxy((tank->x-1)*2, tank->y-1+i);
         printf("%s",empty);
         for (int j = 0; j < 3; j++)
         {
-            gameBoard[tank.y+j-1][tank.x+i-1] = EMPTY;
+            gameBoard[tank->y+j-1][tank->x+i-1] = EMPTY;
         }
     }
 
-    *tank.y += y;
-    *tank.x += x;
+    (*tank).y += y;
+    (*tank).x += x;
 
-    printTank(myTank);
+    printEnemyTank(*tank);
 }
 
 void getInput(int *x, int *y)
@@ -373,41 +373,69 @@ void getInput(int *x, int *y)
     }
 }
 
-void tankSpawning()
+int judgeEnemyTankSpawning(EnemyTank *tank)
+{
+    if (gameBoard[tank->x-1][tank->y-1] != 0 || gameBoard[tank->x-1][tank->y] != 0 || gameBoard[tank->x-1][tank->y+1] != 0
+    || gameBoard[tank->x][tank->y-1] != 0 || gameBoard[tank->x][tank->y] != 0 || gameBoard[tank->x][tank->y+1] != 0
+    || gameBoard[tank->x+1][tank->y-1] != 0 || gameBoard[tank->x+1][tank->y] != 0 || gameBoard[tank->x+1][tank->y+1])
+    {
+        return 0;
+    }
+    return 1;
+}
+
+void tankSpawning(EnemyTank *tank)
 {
     int tankType;
 
-    tankType = rand() % 1;
+    tankType = rand() % 2;
     while (numTanks[tankType] < 0)
     {
-        tankType = rand() % 1;
+        tankType = rand() % 2;
     }
 
     numTanks[tankType] -= 1;
 
     // create enemytank object
 
-    tank1.y = 2;
-    tank1.x = rand() % COL;
-    tank1.direction = 4;
-
-    while (gameBoard[tank1.x-1][tank1.y-1] != 0 || gameBoard[tank1.x-1][tank1.y] != 0 || gameBoard[tank1.x-1][tank1.y+1] != 0
-    || gameBoard[tank1.x][tank1.y-1] != 0 || gameBoard[tank1.x][tank1.y] != 0 || gameBoard[tank1.x][tank1.y+1] != 0
-    || gameBoard[tank1.x+1][tank1.y-1] != 0 || gameBoard[tank1.x+1][tank1.y] != 0 || gameBoard[tank1.x+1][tank1.y+1])
+    tank->y = 2;
+    tank->x = rand() % (COL + 1);
+    tank->direction = 4;
+    tank->type = tankType;
+    
+    switch (tank->type)
     {
-        tank1.x = rand() % COL;
+        case 0:
+            tank->speed = 2;
+            tank->bulletPower = 1;
+            tank->bulletSpeed = 2;
+            tank->health = 2;
+            break;
+        
+        case 1:
+            tank->speed = 5;
+            tank->bulletPower = 1;
+            tank->bulletSpeed = 5;
+            tank->health = 1;
+            break;
+    }
+
+    // turn into function
+    while (judgeEnemyTankSpawning(tank) == 0)
+    {
+        tank->x = rand() % (COL + 1);
     }
 
     for (int i = 0; i < 3; i++)
     {
-        GoToxy((tank1.x-1)*2, tank1.y-1+i);
+        GoToxy((tank->x-1)*2, tank->y-1+i);
         for (int j = 0; j < 3; j++)
         {
-            gameBoard[tank1.y+j][tank1.x+i] = ETANK;
+            gameBoard[tank->y+j][tank->x+i] = ETANK;
         }
     }
 
-    printEnemyTank(tank1);
+    printEnemyTank(*tank);
     tanksOnField += 1;
 }
 
@@ -419,21 +447,37 @@ void gameLoop()
     y = 0;
     while (1)
     {
-        getInput(&x, &y);
+        if (tanksOnField < 3)
+        {
+            if (tank1.health <= 0)
+            {
+                tankSpawning(&tank1);
+                printf("\n1\n");
+            }
+            else if (tank2.health <= 0)
+            {
+                tankSpawning(&tank2);
+                printf("\n2\n");
+            }
+            else if (tank3.health <= 0)
+            {
+                tankSpawning(&tank3);
+                printf("\n3\n");
+            }
+        }
+
+        getInput(&x, &y);     // -1,0|0,0  up,none
         //printf("%d - %d", x, y);
         if (x != 0 || y != 0)
         {
             moveTank(x, y);
         }
 
-        if (tanksOnField < 3)
-        {
-            tankSpawning();
-        }
-
-        // moveEnemyTank(&tank1)
+        moveEnemyTank(&tank1);
+        moveEnemyTank(&tank2);
+        moveEnemyTank(&tank3);
         GoToxy(0,ROW+5);
-        Sleep(50);
+        Sleep(100);
     }
 }
 
@@ -451,7 +495,6 @@ void main()
     srand(time(NULL));
     getHighScore();
     system("cls");
-    srand(time(NULL));
     game();
     SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 7);
     GoToxy(COL*2,ROW);
