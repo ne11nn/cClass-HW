@@ -275,20 +275,25 @@ void startScreen()
 void moveTank(int x, int y)
 {
     char empty = ' ';
+
     for (int i = 0; i < 3; i++)
     {
-        GoToxy((myTank.x-1)*2, myTank.y-1+i);
-        printf("%s",empty);
         for (int j = 0; j < 3; j++)
         {
+            GoToxy((myTank.x-1)*2+j , myTank.y-1+i);
+            printf("%c",empty);
+        
+
             gameBoard[myTank.y+j-1][myTank.x+i-1] = EMPTY;
-        }
+        } 
     }
+    
 
     myTank.y += y;
     myTank.x += x;
 
     printTank(myTank);
+    
 }
 
 void moveEnemyTank(EnemyTank *tank)
@@ -323,10 +328,10 @@ void moveEnemyTank(EnemyTank *tank)
     
     for (int i = 0; i < 3; i++)
     {
-        GoToxy((tank->x-1)*2, tank->y-1+i);
-        printf("%s",empty);
         for (int j = 0; j < 3; j++)
         {
+            GoToxy((tank->x-1)*2+j, tank->y-1+i);
+            printf("%c",empty);
             gameBoard[tank->y+j-1][tank->x+i-1] = EMPTY;
         }
     }
@@ -337,7 +342,7 @@ void moveEnemyTank(EnemyTank *tank)
     printEnemyTank(*tank);
 }
 
-void getInput(int *x, int *y)
+void getInput(int *x, int *y, int *xG, int *yG)
 {
     if (kbhit())
     {
@@ -347,33 +352,46 @@ void getInput(int *x, int *y)
         {
             case UPKEY:
                 myTank.direction = UP;
-                *x = -1;
-                *y = 0;
-                printf("up");
+                *x = 0;
+                *y = -1;
+                *xG = 0;
+                *yG = -1;
                 break;
 
             case DOWNKEY:
                 myTank.direction = DOWN;
-                *x = 1;
-                *y = 0;
+                *x = 0;
+                *y = 1;
+                *xG = 0;
+                *yG = 1;
                 break;
 
             case LEFTKEY:
                 myTank.direction = LEFT;
-                *x = 0;
-                *y = -1;
+                *x = -1;
+                *y = 0;
+                *xG = -1;
+                *yG = 0;
                 break;
 
             case RIGHTKEY:
                 myTank.direction = RIGHT;
-                *x = 0;
-                *y = 1;
+                *x = 1;
+                *y = 0;
+                *xG = 1;
+                *yG = 0;
                 break;
         }
     }
+
+    else
+    {
+        *x = 0;
+        *y = 0;
+    }
 }
 
-int judgeEnemyTankSpawning(EnemyTank *tank)
+int judgeEnemyTankSpawning (EnemyTank *tank)
 {
     if (gameBoard[tank->x-1][tank->y-1] != 0 || gameBoard[tank->x-1][tank->y] != 0 || gameBoard[tank->x-1][tank->y+1] != 0
     || gameBoard[tank->x][tank->y-1] != 0 || gameBoard[tank->x][tank->y] != 0 || gameBoard[tank->x][tank->y+1] != 0
@@ -439,45 +457,56 @@ void tankSpawning(EnemyTank *tank)
     tanksOnField += 1;
 }
 
+int judgeMovement(int x, int y)
+{
+    if (gameBoard[myTank.x + 2*x][myTank.y - 2*y] != EMPTY)
+    {
+        return 1;
+    }
+    return 0;
+}
+
 void gameLoop()
 {
-    int x, y;
+    int x, y, xG, yG;
     int tankType;
+    xG = 0;
+    yG = -1;
     x = 0;
     y = 0;
     while (1)
     {
+        loopCount ++;
         if (tanksOnField < 3)
         {
             if (tank1.health <= 0)
             {
                 tankSpawning(&tank1);
-                printf("\n1\n");
             }
             else if (tank2.health <= 0)
             {
                 tankSpawning(&tank2);
-                printf("\n2\n");
             }
             else if (tank3.health <= 0)
             {
                 tankSpawning(&tank3);
-                printf("\n3\n");
             }
         }
 
-        getInput(&x, &y);     // -1,0|0,0  up,none
+        getInput(&x, &y, &xG, &yG);     // -1,0|0,0  up,none 
+
         //printf("%d - %d", x, y);
-        if (x != 0 || y != 0)
+        judgeMovement(x, y);
+        if (judgeMovement(xG, yG) == 0)
         {
             moveTank(x, y);
         }
-
+    
         moveEnemyTank(&tank1);
         moveEnemyTank(&tank2);
         moveEnemyTank(&tank3);
         GoToxy(0,ROW+5);
-        Sleep(100);
+        Sleep(50);
     }
 }
 

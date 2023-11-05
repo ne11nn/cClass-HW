@@ -105,6 +105,9 @@ int tanksOnField = 0;
 
 int gameBoard[ROW][COL];
 
+
+int loopCount = 0;
+
 // structure definitions
 
 // MyTank
@@ -182,6 +185,7 @@ void initiateMap (int mapNumber);
 void displayMap (int mapNumber);
 void startScreen ();
 void moveTank (int x, int y);
-void getInput (int *x, int *y);
+void getInput (int *x, int *y, int *xG, int *yG);
+int judgeMovement ();
 void gameLoop ();
 void game ();
