@@ -186,6 +186,8 @@ void displayMap (int mapNumber);
 void startScreen ();
 void moveTank (int x, int y);
 void getInput (int *x, int *y, int *xG, int *yG);
-int judgeMovement ();
+int judgeMovement (int x, int y);
 void gameLoop ();
 void game ();
+
+void printGameBoard();

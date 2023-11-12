@@ -45,7 +45,7 @@ void printTank(MyTank tank)
     char *(*tankF)[4] = tank_figure[tank.shape];
     for (int i = 0; i < 3; i++)
     {
-        GoToxy((tank.x-1)*2, tank.y-1+i);
+        GoToxy((tank.x-1), tank.y-1+i);
         printf("%s", tankF[i][tank.direction]);
         for (int j = 0; j < 3; j++)
         {
@@ -170,8 +170,8 @@ void displayMap(int mapNumber)
             {
                 case REGWALL:
                     SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE),FOREGROUND_INTENSITY|FOREGROUND_GREEN|FOREGROUND_RED|BACKGROUND_GREEN|BACKGROUND_RED);
-				    GoToxy(2*j,i);
-				    printf("▓▓"); 
+				    GoToxy(j,i);
+				    printf("▓"); 
                     break;
 
                 case OUTERWALL:
@@ -179,28 +179,28 @@ void displayMap(int mapNumber)
 					    |FOREGROUND_RED|FOREGROUND_BLUE|BACKGROUND_GREEN|BACKGROUND_RED|BACKGROUND_BLUE);
                     SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE),FOREGROUND_INTENSITY|FOREGROUND_GREEN
 					    |FOREGROUND_RED|FOREGROUND_BLUE|BACKGROUND_GREEN|BACKGROUND_RED|BACKGROUND_BLUE);
-				    GoToxy(2*j,i);
-				    printf("■■");
+				    GoToxy(j,i);
+				    printf("■");
                     break;
 
                 case REINWALL:
                     SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE),FOREGROUND_GREEN|FOREGROUND_BLUE|FOREGROUND_RED
                         |BACKGROUND_GREEN|BACKGROUND_BLUE|BACKGROUND_RED);
-                    GoToxy(2*j,i);
-				    printf("■■");
+                    GoToxy(j,i);
+				    printf("■");
                     break;
 
                 case HOME:
                     SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE),FOREGROUND_RED
                         |BACKGROUND_RED);
-                    GoToxy(2*j,i);
-                    printf("■■");
+                    GoToxy(j,i);
+                    printf("■");
                     break;
 
                 case EMPTY:
                     SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE),FOREGROUND_GREEN
 			        |FOREGROUND_RED|FOREGROUND_BLUE);
-                    GoToxy(2*j,i);
+                    GoToxy(j,i);
                     printf("%c",strVal);
                     break;
             }
@@ -280,7 +280,7 @@ void moveTank(int x, int y)
     {
         for (int j = 0; j < 3; j++)
         {
-            GoToxy((myTank.x-1)*2+j , myTank.y-1+i);
+            GoToxy((myTank.x-1)+j , myTank.y-1+i);
             printf("%c",empty);
         
 
@@ -330,7 +330,7 @@ void moveEnemyTank(EnemyTank *tank)
     {
         for (int j = 0; j < 3; j++)
         {
-            GoToxy((tank->x-1)*2+j, tank->y-1+i);
+            GoToxy((tank->x-1)+j, tank->y-1+i);
             printf("%c",empty);
             gameBoard[tank->y+j-1][tank->x+i-1] = EMPTY;
         }
@@ -438,7 +438,6 @@ void tankSpawning(EnemyTank *tank)
             break;
     }
 
-    // turn into function
     while (judgeEnemyTankSpawning(tank) == 0)
     {
         tank->x = rand() % (COL + 1);
@@ -446,7 +445,7 @@ void tankSpawning(EnemyTank *tank)
 
     for (int i = 0; i < 3; i++)
     {
-        GoToxy((tank->x-1)*2, tank->y-1+i);
+        GoToxy((tank->x-1), tank->y-1+i);
         for (int j = 0; j < 3; j++)
         {
             gameBoard[tank->y+j][tank->x+i] = ETANK;
@@ -457,12 +456,22 @@ void tankSpawning(EnemyTank *tank)
     tanksOnField += 1;
 }
 
+
 int judgeMovement(int x, int y)
 {
-    if (gameBoard[myTank.x + 2*x][myTank.y - 2*y] != EMPTY)
+    // if (gameBoard[myTank.x + 2*x][myTank.y - 2*y] != EMPTY)
+    // {
+    //     return 1;
+    // }
+
+    GoToxy(myTank.x+2*x,myTank.y+2*y);
+    printf("h");
+
+    if (gameBoard[myTank.x-2*x][myTank.y-2*y] != EMPTY)
     {
         return 1;
     }
+
     return 0;
 }
 
@@ -495,17 +504,18 @@ void gameLoop()
 
         getInput(&x, &y, &xG, &yG);     // -1,0|0,0  up,none 
 
-        //printf("%d - %d", x, y);
-        judgeMovement(x, y);
+        // if (judgeMovement(xG, yG) == 0)
         if (judgeMovement(xG, yG) == 0)
         {
             moveTank(x, y);
         }
     
-        moveEnemyTank(&tank1);
-        moveEnemyTank(&tank2);
-        moveEnemyTank(&tank3);
+        // moveEnemyTank(&tank1);
+        // moveEnemyTank(&tank2);
+        // moveEnemyTank(&tank3);
         GoToxy(0,ROW+5);
+        printf("%d|-----|%d", xG, yG);
+        printf("\n");
         Sleep(50);
     }
 }
@@ -516,6 +526,14 @@ void game()
     hideCursor(1);
     initiateMap(1);
     displayMap(1);
+    // for (int i = 0; i < ROW; i++)
+    // {
+    //     for (int j = 0; j < COL; j++)
+    //     {
+    //         printf("%d", gameBoard[i][j]);
+    //     }
+    //     printf("\n");
+    // }
     gameLoop();
 }
 
