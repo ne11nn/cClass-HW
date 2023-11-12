@@ -325,21 +325,23 @@ void moveEnemyTank(EnemyTank *tank)
             x = -1;
             break;
     }
-    
-    for (int i = 0; i < 3; i++)
+    if (judgeMovement(x,y) == 0)
     {
-        for (int j = 0; j < 3; j++)
+        for (int i = 0; i < 3; i++)
         {
-            GoToxy((tank->x-1)+j, tank->y-1+i);
-            printf("%c",empty);
-            gameBoard[tank->y+j-1][tank->x+i-1] = EMPTY;
+            for (int j = 0; j < 3; j++)
+            {
+                GoToxy((tank->x-1)+j, tank->y-1+i);
+                printf("%c",empty);
+                gameBoard[tank->y+j-1][tank->x+i-1] = EMPTY;
+            }
         }
+
+        (*tank).y += y;
+        (*tank).x += x;
+
+        printEnemyTank(*tank);
     }
-
-    (*tank).y += y;
-    (*tank).x += x;
-
-    printEnemyTank(*tank);
 }
 
 void getInput(int *x, int *y, int *xG, int *yG)
@@ -381,6 +383,10 @@ void getInput(int *x, int *y, int *xG, int *yG)
                 *xG = 1;
                 *yG = 0;
                 break;
+
+            default:
+                *x = 0;
+                *y = 0;
         }
     }
 
@@ -464,12 +470,29 @@ int judgeMovement(int x, int y)
     //     return 1;
     // }
 
-    GoToxy(myTank.x+2*x,myTank.y+2*y);
-    printf("h");
+    // GoToxy(myTank.x+2*x,myTank.y+2*y);
+    // printf("h");
 
-    if (gameBoard[myTank.x-2*x][myTank.y-2*y] != EMPTY)
+    if (x == 0)
     {
-        return 1;
+        for (int i = -1; i < 2; i++)
+        {
+            if (gameBoard[myTank.y+2*y][myTank.x+2*x+i])
+            {
+                return 1;
+            }
+        }
+    }
+
+    if (y == 0)
+    {
+        for (int i = -1; i < 2; i++)
+        {
+            if (gameBoard[myTank.y+2*y+i][myTank.x+2*x])
+            {
+                return 1;
+            }
+        }
     }
 
     return 0;
@@ -510,12 +533,19 @@ void gameLoop()
             moveTank(x, y);
         }
     
-        // moveEnemyTank(&tank1);
-        // moveEnemyTank(&tank2);
-        // moveEnemyTank(&tank3);
+        moveEnemyTank(&tank1);
+        moveEnemyTank(&tank2);
+        moveEnemyTank(&tank3);
         GoToxy(0,ROW+5);
-        printf("%d|-----|%d", xG, yG);
-        printf("\n");
+        printf("%d|-----|%d\n%d|-----|%d\n", xG, yG,myTank.x,myTank.y);
+        // for (int i = 0; i < ROW; i++)
+        // {
+        //     for (int j = 0; j < COL; j++)
+        //     {
+        //         printf("%d", gameBoard[i][j]);
+        //     }
+        //     printf("\n");
+        // }
         Sleep(50);
     }
 }
@@ -526,14 +556,6 @@ void game()
     hideCursor(1);
     initiateMap(1);
     displayMap(1);
-    // for (int i = 0; i < ROW; i++)
-    // {
-    //     for (int j = 0; j < COL; j++)
-    //     {
-    //         printf("%d", gameBoard[i][j]);
-    //     }
-    //     printf("\n");
-    // }
     gameLoop();
 }
 
