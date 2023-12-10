@@ -57,15 +57,11 @@ void printTank(MyTank tank)
 
 void printEnemyTank(EnemyTank tank)
 {
-    char *(*tankF)[4] = tank_figure[tank.shape];
+    char *(*tankF)[4] = tank_figure[0];
     for (int i = 0; i < 3; i++)
     {
-        GoToxy((tank.x-1)*2, tank.y-1+i);
+        GoToxy((tank.x-1), tank.y-1+i);
         printf("%s", tankF[i][tank.direction]);
-        for (int j = 0; j < 3; j++)
-        {
-            gameBoard[tank.y+j-1][tank.x+i-1] = ETANK;
-        }
     }
     GoToxy(0,ROW+5);
 }
@@ -296,6 +292,41 @@ void moveTank(int x, int y)
     
 }
 
+int judgeEnemyMovement(EnemyTank tank, int x, int y)
+{
+    // if (gameBoard[myTank.x + 2*x][myTank.y - 2*y] != EMPTY)
+    // {
+    //     return 1;
+    // }
+
+    // GoToxy(myTank.x+2*x,myTank.y+2*y);
+    // printf("h");
+
+    if (x == 0)
+    {
+        for (int i = -1; i < 2; i++)
+        {
+            if (gameBoard[tank.y+2*y][tank.x+2*x+i])
+            {
+                return 1;
+            }
+        }
+    }
+
+    if (y == 0)
+    {
+        for (int i = -1; i < 2; i++)
+        {
+            if (gameBoard[tank.y+2*y+i][tank.x+2*x])
+            {
+                return 1;
+            }
+        }
+    }
+
+    return 0;
+}
+
 void moveEnemyTank(EnemyTank *tank)
 {
     char empty = ' ';
@@ -325,7 +356,7 @@ void moveEnemyTank(EnemyTank *tank)
             x = -1;
             break;
     }
-    if (judgeMovement(x,y) == 0)
+    if (judgeEnemyMovement(*tank,x,y) == 0)
     {
         for (int i = 0; i < 3; i++)
         {
@@ -399,11 +430,15 @@ void getInput(int *x, int *y, int *xG, int *yG)
 
 int judgeEnemyTankSpawning (EnemyTank *tank)
 {
-    if (gameBoard[tank->x-1][tank->y-1] != 0 || gameBoard[tank->x-1][tank->y] != 0 || gameBoard[tank->x-1][tank->y+1] != 0
-    || gameBoard[tank->x][tank->y-1] != 0 || gameBoard[tank->x][tank->y] != 0 || gameBoard[tank->x][tank->y+1] != 0
-    || gameBoard[tank->x+1][tank->y-1] != 0 || gameBoard[tank->x+1][tank->y] != 0 || gameBoard[tank->x+1][tank->y+1])
+    for (int i = -1; i < 2; i++)
     {
-        return 0;
+        for (int j = -1; j < 2; j++)
+        {
+            if (gameBoard[tank->y+j][tank->x+i] != 0)
+            {
+                return 0;
+            }
+        }
     }
     return 1;
 }
@@ -424,6 +459,7 @@ void tankSpawning(EnemyTank *tank)
 
     tank->y = 2;
     tank->x = rand() % (COL + 1);
+    printf("%d", tank->x);
     tank->direction = 4;
     tank->type = tankType;
     
@@ -444,15 +480,25 @@ void tankSpawning(EnemyTank *tank)
             break;
     }
 
-    while (judgeEnemyTankSpawning(tank) == 0)
+    while (1)
     {
-        tank->x = rand() % (COL + 1);
+        if (judgeEnemyTankSpawning(tank) == 0)
+        {
+            GoToxy(50,49);
+            printf("original, %d", tank->x);
+            tank->x = rand() % (COL + 1);
+            GoToxy(50,50);
+            printf("redo, %d", tank->x);
+        }
+        else
+        {
+            break;
+        }
     }
 
-    for (int i = 0; i < 3; i++)
+    for (int i = -1; i < 2; i++)
     {
-        GoToxy((tank->x-1), tank->y-1+i);
-        for (int j = 0; j < 3; j++)
+        for (int j = -1; j < 2; j++)
         {
             gameBoard[tank->y+j][tank->x+i] = ETANK;
         }
@@ -465,14 +511,6 @@ void tankSpawning(EnemyTank *tank)
 
 int judgeMovement(int x, int y)
 {
-    // if (gameBoard[myTank.x + 2*x][myTank.y - 2*y] != EMPTY)
-    // {
-    //     return 1;
-    // }
-
-    // GoToxy(myTank.x+2*x,myTank.y+2*y);
-    // printf("h");
-
     if (x == 0)
     {
         for (int i = -1; i < 2; i++)
@@ -532,12 +570,12 @@ void gameLoop()
         {
             moveTank(x, y);
         }
-    
+
         moveEnemyTank(&tank1);
         moveEnemyTank(&tank2);
         moveEnemyTank(&tank3);
-        GoToxy(0,ROW+5);
-        printf("%d|-----|%d\n%d|-----|%d\n", xG, yG,myTank.x,myTank.y);
+        // GoToxy(0,ROW+5);
+        // printf("%d|-----|%d\n%d|-----|%d\n", xG, yG,myTank.x,myTank.y);
         // for (int i = 0; i < ROW; i++)
         // {
         //     for (int j = 0; j < COL; j++)
@@ -546,7 +584,7 @@ void gameLoop()
         //     }
         //     printf("\n");
         // }
-        Sleep(50);
+        Sleep(250);
     }
 }
 
