@@ -57,7 +57,7 @@ void printTank(MyTank tank)
 
 void printEnemyTank(EnemyTank tank)
 {
-    char *(*tankF)[4] = tank_figure[0];
+    char *(*tankF)[4] = tank_figure[tank.shape];
     for (int i = 0; i < 3; i++)
     {
         GoToxy((tank.x-1), tank.y-1+i);
@@ -333,15 +333,16 @@ void moveEnemyTank(EnemyTank *tank)
     int y, x;
 
     int direction = rand() % 4;
+    (*tank).direction = direction;
 
     switch (direction)
     {
-        case UP:
+        case DOWN:
             y = 1;
             x = 0;
             break;
 
-        case DOWN:
+        case UP:
             y = -1;
             x = 0;
             break;
@@ -353,7 +354,7 @@ void moveEnemyTank(EnemyTank *tank)
 
         case LEFT:
             y = 0;
-            x = -1;
+            x = -1; 
             break;
     }
     if (judgeEnemyMovement(*tank,x,y) == 0)
@@ -459,8 +460,13 @@ void tankSpawning(EnemyTank *tank)
 
     tank->y = 2;
     tank->x = rand() % (COL + 1);
-    printf("%d", tank->x);
-    tank->direction = 4;
+    
+    while (judgeEnemyTankSpawning(tank) == 0)
+    {
+        tank->x = rand() % (COL + 1);
+    }
+
+    tank->direction = 1;
     tank->type = tankType;
     
     switch (tank->type)
@@ -478,22 +484,6 @@ void tankSpawning(EnemyTank *tank)
             tank->bulletSpeed = 5;
             tank->health = 1;
             break;
-    }
-
-    while (1)
-    {
-        if (judgeEnemyTankSpawning(tank) == 0)
-        {
-            GoToxy(50,49);
-            printf("original, %d", tank->x);
-            tank->x = rand() % (COL + 1);
-            GoToxy(50,50);
-            printf("redo, %d", tank->x);
-        }
-        else
-        {
-            break;
-        }
     }
 
     for (int i = -1; i < 2; i++)
@@ -571,9 +561,21 @@ void gameLoop()
             moveTank(x, y);
         }
 
-        moveEnemyTank(&tank1);
-        moveEnemyTank(&tank2);
-        moveEnemyTank(&tank3);
+        if (tank1.health > 0)
+        {
+            moveEnemyTank(&tank1);
+        }
+
+        if (tank2.health > 0)
+        {
+            moveEnemyTank(&tank2);
+        }
+
+        if (tank3.health > 0)
+        {
+            moveEnemyTank(&tank3);
+        }
+        
         // GoToxy(0,ROW+5);
         // printf("%d|-----|%d\n%d|-----|%d\n", xG, yG,myTank.x,myTank.y);
         // for (int i = 0; i < ROW; i++)
@@ -590,6 +592,9 @@ void gameLoop()
 
 void game()
 {
+    tank1.health = 0;
+    tank2.health = 0;
+    tank3.health = 0;
     startScreen();
     hideCursor(1);
     initiateMap(1);
