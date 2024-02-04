@@ -19,6 +19,8 @@
 #define DOWNKEY 80
 #define LEFTKEY 75
 #define RIGHTKEY 77
+#define SMALLFKEY 102
+#define BIGFKEY 70
 
 // Environmental Objects
 #define EMPTY 0
@@ -33,8 +35,11 @@
 // Interactive Objects
 #define PTANK 8
 #define ETANK 9
-#define BULLET 10
-#define POWERUP 11
+#define MYBULLET 10
+#define BULLET1 11
+#define BULLET2 12
+#define BULLET3 13
+#define POWERUP 14
 
 // MyTank category: M at the start
 #define MREGULAR 0
@@ -150,6 +155,17 @@ typedef struct
 
 } EnemyTank;
 
+typedef struct
+{
+    int x;
+    int y;
+    int speed;
+    int direction;
+    int available;
+    int power;
+    
+} Bullet;
+
 // Landscape
 typedef struct
 {
@@ -179,8 +195,11 @@ void getHighScore ();
 void moveEnemyTank (EnemyTank *tank);
 void hideCursor (int on);
 void printTank (MyTank tank);
+void printBullet (Bullet bullet);
 void printEnemyTank (EnemyTank tank);
 void GoToxy (int x, int y); 
+void initiateTank ();
+void myBulletSpawning (MyTank tank);
 void initiateMap (int mapNumber);
 void displayMap (int mapNumber);
 void startScreen ();

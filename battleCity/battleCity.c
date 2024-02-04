@@ -6,6 +6,11 @@ EnemyTank tank1;
 EnemyTank tank2;
 EnemyTank tank3;
 
+Bullet myBullet;
+Bullet bullet1;
+Bullet bullet2;
+Bullet bullet3;
+
 void getHighScore()
 {
     FILE *fp = NULL;
@@ -62,20 +67,65 @@ void printEnemyTank(EnemyTank tank)
     {
         GoToxy((tank.x-1), tank.y-1+i);
         printf("%s", tankF[i][tank.direction]);
+        for (int j = 0; j < 3; j++)
+        {
+            gameBoard[tank.y+j-1][tank.x+i-1] = ETANK;
+        }
     }
     GoToxy(0,ROW+5);
 }
 
-/*
-void initiateMap (int mapNumber)
-Creates map landscape for level mapNumber and resets enemy tank amount
+void printBullet(Bullet bullet)
+{
+    GoToxy(bullet.x, bullet.y);
+    char clear = ' ';
+    SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE),FOREGROUND_RED|FOREGROUND_GREEN);
+    printf("O");
+    SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 7);
+}
 
-Args:
-    int mapNumber - the level number (1-5) wanted to be generated
+void initiateTank()
+{
+    myTank.x = COL/2 - 5;
+    myTank.y = 38;
+    myTank.shape = myTank.type - 1;
+    myTank.direction = 0;
 
-Returns:
-    NULL
-*/
+    switch (myTank.type)
+    {
+        case 1:
+            myTank.speed = 2;
+            myTank.bulletPower = 1;
+            myTank.bulletSpeed = 2;
+            myTank.health = 3;
+            myTank.lives = 4;
+            break;
+
+        case 2:
+            myTank.speed = 4;
+            myTank.bulletPower = 1;
+            myTank.bulletSpeed = 2;
+            myTank.health = 3;
+            myTank.lives = 3;
+            break;
+
+        case 3:
+            myTank.speed = 3;
+            myTank.bulletPower = 2;
+            myTank.bulletSpeed = 2;
+            myTank.health = 2;
+            myTank.lives = 3;
+            break;
+
+        case 4:
+            myTank.speed = 1;
+            myTank.bulletPower = 2;
+            myTank.bulletSpeed = 2;
+            myTank.health = 5;
+            myTank.lives = 3;
+            break;
+    }
+}
 
 void initiateMap(int mapNumber)
 {
@@ -119,40 +169,7 @@ void initiateMap(int mapNumber)
     myTank.shape = myTank.type - 1;
     myTank.direction = 0;
 
-    switch (myTank.type)
-    {
-        case 1:
-            myTank.speed = 2;
-            myTank.bulletPower = 1;
-            myTank.bulletSpeed = 2;
-            myTank.health = 3;
-            myTank.lives = 4;
-            break;
-
-        case 2:
-            myTank.speed = 4;
-            myTank.bulletPower = 1;
-            myTank.bulletSpeed = 2;
-            myTank.health = 3;
-            myTank.lives = 3;
-            break;
-
-        case 3:
-            myTank.speed = 3;
-            myTank.bulletPower = 2;
-            myTank.bulletSpeed = 2;
-            myTank.health = 2;
-            myTank.lives = 3;
-            break;
-
-        case 4:
-            myTank.speed = 1;
-            myTank.bulletPower = 2;
-            myTank.bulletSpeed = 2;
-            myTank.health = 5;
-            myTank.lives = 3;
-            break;
-    }
+    initiateTank();
 }
 
 void displayMap(int mapNumber)
@@ -278,8 +295,6 @@ void moveTank(int x, int y)
         {
             GoToxy((myTank.x-1)+j , myTank.y-1+i);
             printf("%c",empty);
-        
-
             gameBoard[myTank.y+j-1][myTank.x+i-1] = EMPTY;
         } 
     }
@@ -376,6 +391,36 @@ void moveEnemyTank(EnemyTank *tank)
     }
 }
 
+void myBulletSpawning(MyTank tank)
+{
+    myBullet.available = 1;
+    if (tank.direction == UP)
+    {
+        myBullet.x = tank.x;
+        myBullet.y = tank.y - 2;
+    }
+    else if (tank.direction == DOWN)
+    {
+        myBullet.x = tank.x;
+        myBullet.y = tank.y + 2;
+    }
+    else if (tank.direction == LEFT)
+    {
+        myBullet.x = tank.x - 2;
+        myBullet.y = tank.y;
+    }
+    else if (tank.direction == RIGHT)
+    {
+        myBullet.x = tank.x + 2;
+        myBullet.y = tank.y;
+    }
+
+    gameBoard[myBullet.x][myBullet.y] = MYBULLET;
+
+    myBullet.direction = tank.direction;
+    printBullet(myBullet);
+}
+
 void getInput(int *x, int *y, int *xG, int *yG)
 {
     if (kbhit())
@@ -414,6 +459,14 @@ void getInput(int *x, int *y, int *xG, int *yG)
                 *y = 0;
                 *xG = 1;
                 *yG = 0;
+                break;  
+                
+            case SMALLFKEY:
+                myBulletSpawning(myTank);
+                break;
+
+            case BIGFKEY:
+                myBulletSpawning(myTank);
                 break;
 
             default:
@@ -466,7 +519,7 @@ void tankSpawning(EnemyTank *tank)
         tank->x = rand() % (COL + 1);
     }
 
-    tank->direction = 1;
+    tank->direction = DOWN;
     tank->type = tankType;
     
     switch (tank->type)
@@ -560,6 +613,10 @@ void gameLoop()
         {
             moveTank(x, y);
         }
+        else
+        {
+            printTank(myTank);
+        }
 
         if (tank1.health > 0)
         {
@@ -575,6 +632,7 @@ void gameLoop()
         {
             moveEnemyTank(&tank3);
         }
+
         
         // GoToxy(0,ROW+5);
         // printf("%d|-----|%d\n%d|-----|%d\n", xG, yG,myTank.x,myTank.y);
@@ -586,7 +644,7 @@ void gameLoop()
         //     }
         //     printf("\n");
         // }
-        Sleep(250);
+        Sleep(100);
     }
 }
 
