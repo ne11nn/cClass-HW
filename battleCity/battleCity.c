@@ -78,7 +78,6 @@ void printEnemyTank(EnemyTank tank)
 void printBullet(Bullet bullet)
 {
     GoToxy(bullet.x, bullet.y);
-    char clear = ' ';
     SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE),FOREGROUND_RED|FOREGROUND_GREEN);
     printf("O");
     SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 7);
@@ -393,31 +392,77 @@ void moveEnemyTank(EnemyTank *tank)
 
 void myBulletSpawning(MyTank tank)
 {
-    myBullet.available = 1;
-    if (tank.direction == UP)
+    if (myBullet.available == 1)
     {
-        myBullet.x = tank.x;
-        myBullet.y = tank.y - 2;
+        int x, y;
+        if (tank.direction == UP)
+        {
+            x = tank.x;
+            y = tank.y - 2;
+        }
+        else if (tank.direction == DOWN)
+        {
+            x = tank.x;
+            y = tank.y + 2;
+        }
+        else if (tank.direction == LEFT)
+        {
+            x = tank.x - 2;
+            y = tank.y;
+        }
+        else if (tank.direction == RIGHT)
+        {
+            x = tank.x + 2;
+            y = tank.y;
+        }
+
+        if (gameBoard[y][x] != REINWALL && gameBoard[y][x] != OUTERWALL && gameBoard[y][x] != TREE && gameBoard[y][x] != WATER && gameBoard[y][x] != HOME)
+        {
+            gameBoard[y][x] = MYBULLET;
+            myBullet.x = x;
+            myBullet.y = y;
+            myBullet.speed = tank.bulletSpeed;
+            myBullet.power = tank.bulletPower;
+            myBullet.direction = tank.direction;
+            printBullet(myBullet);
+            myBullet.available = 0;
+        }
     }
-    else if (tank.direction == DOWN)
+}
+
+void moveSelfBullet()
+{
+    char clear = ' ';
+
+    GoToxy(myBullet.x, myBullet.y);
+    printf("%c",clear);
+    gameBoard[myBullet.x][myBullet.y] = EMPTY;
+
+    int x, y;
+    if (myBullet.direction == UP)
     {
-        myBullet.x = tank.x;
-        myBullet.y = tank.y + 2;
+        x = myBullet.x;
+        y = myBullet.y - myBullet.speed;
     }
-    else if (tank.direction == LEFT)
+    else if (myBullet.direction == DOWN)
     {
-        myBullet.x = tank.x - 2;
-        myBullet.y = tank.y;
+        x = myBullet.x;
+        y = myBullet.y + myBullet.speed;
     }
-    else if (tank.direction == RIGHT)
+    else if (myBullet.direction == LEFT)
     {
-        myBullet.x = tank.x + 2;
-        myBullet.y = tank.y;
+        x = myBullet.x - myBullet.speed;
+        y = myBullet.y;
+    }
+    else if (myBullet.direction == RIGHT)
+    {
+        x = myBullet.x + myBullet.speed;
+        y = myBullet.y;
     }
 
-    gameBoard[myBullet.x][myBullet.y] = MYBULLET;
-
-    myBullet.direction = tank.direction;
+    gameBoard[y][x] = MYBULLET;
+    myBullet.x = x;
+    myBullet.y = y;
     printBullet(myBullet);
 }
 
@@ -644,6 +689,9 @@ void gameLoop()
         //     }
         //     printf("\n");
         // }
+
+        moveSelfBullet();
+
         Sleep(100);
     }
 }
@@ -662,6 +710,7 @@ void game()
 
 void main()
 {
+    myBullet.available = 1;
     srand(time(NULL));
     getHighScore();
     system("cls");
