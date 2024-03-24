@@ -200,6 +200,8 @@ void printEnemyTank (EnemyTank tank);
 void GoToxy (int x, int y); 
 void initiateTank ();
 void myBulletSpawning (MyTank tank);
+int judgeBulletMovement (int x, int y);
+void moveSelfBullet ();
 void initiateMap (int mapNumber);
 void displayMap (int mapNumber);
 void startScreen ();

@@ -430,40 +430,70 @@ void myBulletSpawning(MyTank tank)
     }
 }
 
+int judgeBulletMovement(int x, int y)
+{
+    if (gameBoard[y][x] == EMPTY || gameBoard[y][x] == WATER)
+    {
+        return 2;
+    }
+    else if (gameBoard[y][x] == REGWALL)
+    {
+        return 1;
+    }
+    else
+    {
+        return 0;
+    }
+}
+
 void moveSelfBullet()
 {
     char clear = ' ';
 
     GoToxy(myBullet.x, myBullet.y);
     printf("%c",clear);
-    gameBoard[myBullet.x][myBullet.y] = EMPTY;
+    gameBoard[myBullet.y][myBullet.x] = EMPTY;
 
     int x, y;
     if (myBullet.direction == UP)
     {
         x = myBullet.x;
-        y = myBullet.y - myBullet.speed;
+        y = myBullet.y - 1;
     }
     else if (myBullet.direction == DOWN)
     {
         x = myBullet.x;
-        y = myBullet.y + myBullet.speed;
+        y = myBullet.y + 1;
     }
     else if (myBullet.direction == LEFT)
     {
-        x = myBullet.x - myBullet.speed;
+        x = myBullet.x - 1;
         y = myBullet.y;
     }
     else if (myBullet.direction == RIGHT)
     {
-        x = myBullet.x + myBullet.speed;
+        x = myBullet.x + 1;
         y = myBullet.y;
     }
 
-    gameBoard[y][x] = MYBULLET;
-    myBullet.x = x;
-    myBullet.y = y;
-    printBullet(myBullet);
+    if (judgeBulletMovement(x, y) == 2)
+    {
+        gameBoard[y][x] = MYBULLET;
+        myBullet.x = x;
+        myBullet.y = y;
+        printBullet(myBullet);
+    }
+    else if (judgeBulletMovement(x, y) == 1)
+    {
+        gameBoard[y][x] = EMPTY;
+        GoToxy(x,y);
+        printf("%c", clear);
+        myBullet.available = 1;
+    }
+    else
+    {
+        myBullet.available = 1;
+    }
 }
 
 void getInput(int *x, int *y, int *xG, int *yG)
@@ -690,7 +720,10 @@ void gameLoop()
         //     printf("\n");
         // }
 
-        moveSelfBullet();
+        if (myBullet.available == 0)
+        {
+            moveSelfBullet();
+        }
 
         Sleep(100);
     }
