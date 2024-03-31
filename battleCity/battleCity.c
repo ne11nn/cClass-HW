@@ -93,7 +93,7 @@ void initiateTank()
     switch (myTank.type)
     {
         case 1:
-            myTank.speed = 2;
+            myTank.speed = 3;
             myTank.bulletPower = 1;
             myTank.bulletSpeed = 2;
             myTank.health = 3;
@@ -101,7 +101,7 @@ void initiateTank()
             break;
 
         case 2:
-            myTank.speed = 4;
+            myTank.speed = 1;
             myTank.bulletPower = 1;
             myTank.bulletSpeed = 2;
             myTank.health = 3;
@@ -109,7 +109,7 @@ void initiateTank()
             break;
 
         case 3:
-            myTank.speed = 3;
+            myTank.speed = 2;
             myTank.bulletPower = 2;
             myTank.bulletSpeed = 2;
             myTank.health = 2;
@@ -117,9 +117,9 @@ void initiateTank()
             break;
 
         case 4:
-            myTank.speed = 1;
+            myTank.speed = 3;
             myTank.bulletPower = 2;
-            myTank.bulletSpeed = 2;
+            myTank.bulletSpeed = 3;
             myTank.health = 5;
             myTank.lives = 3;
             break;
@@ -440,10 +440,34 @@ int judgeBulletMovement(int x, int y)
     {
         return 1;
     }
+    else if (gameBoard[y][x] == ETANK)
+    {
+        return -1;
+    }
     else
     {
         return 0;
     }
+}
+
+int judgeTank(int x, int y)
+{
+    double tank1dis = sqrt(pow((tank1.x - x), 2) + pow((tank1.y - y), 2));
+    double tank2dis = sqrt(pow((tank2.x - x), 2) + pow((tank2.y - y), 2));
+    double tank3dis = sqrt(pow((tank3.x - x), 2) + pow((tank3.y - y), 2));
+
+    if (tank1dis < tank2dis && tank1dis < tank3dis)
+	{
+		return 1;
+	}
+	else if (tank2dis < tank3dis)
+	{
+		return 2;
+	}
+	else
+	{
+		return 3;
+	}
 }
 
 void moveSelfBullet()
@@ -488,6 +512,27 @@ void moveSelfBullet()
         gameBoard[y][x] = EMPTY;
         GoToxy(x,y);
         printf("%c", clear);
+        myBullet.available = 1;
+    }
+    else if (judgeBulletMovement(x, y) == -1)
+    {
+        int result = judgeTank(x,y);
+        if (result == 1)
+        {
+            tank1.health -= myTank.bulletPower;
+            printf("tank1");
+        }
+        else if (result == 2)
+        {
+            tank2.health -= myTank.bulletPower;
+            printf("tank2");
+        }
+        else
+        {
+            tank3.health -= myTank.bulletPower;
+            printf("tank3");
+        }
+
         myBullet.available = 1;
     }
     else
@@ -654,6 +699,8 @@ int judgeMovement(int x, int y)
     return 0;
 }
 
+// 60 
+
 void gameLoop()
 {
     int x, y, xG, yG;
@@ -664,7 +711,8 @@ void gameLoop()
     y = 0;
     while (1)
     {
-        loopCount ++;
+        cycle += 1;
+
         if (tanksOnField < 3)
         {
             if (tank1.health <= 0)
@@ -684,7 +732,7 @@ void gameLoop()
         getInput(&x, &y, &xG, &yG);     // -1,0|0,0  up,none 
 
         // if (judgeMovement(xG, yG) == 0)
-        if (judgeMovement(xG, yG) == 0)
+        if (judgeMovement(xG, yG) == 0 && cycle % myTank.speed == 0)
         {
             moveTank(x, y);
         }
@@ -693,17 +741,17 @@ void gameLoop()
             printTank(myTank);
         }
 
-        if (tank1.health > 0)
+        if (tank1.health > 0 && cycle % tank1.speed == 0)
         {
             moveEnemyTank(&tank1);
         }
 
-        if (tank2.health > 0)
+        if (tank2.health > 0 && cycle % tank2.speed == 0)
         {
             moveEnemyTank(&tank2);
         }
 
-        if (tank3.health > 0)
+        if (tank3.health > 0 && cycle % tank3.speed == 0)
         {
             moveEnemyTank(&tank3);
         }
@@ -720,12 +768,12 @@ void gameLoop()
         //     printf("\n");
         // }
 
-        if (myBullet.available == 0)
+        if (myBullet.available == 0 && cycle % myTank.bulletSpeed == 0)
         {
             moveSelfBullet();
         }
 
-        Sleep(100);
+        Sleep(20);
     }
 }
 

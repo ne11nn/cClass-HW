@@ -3,6 +3,7 @@
 #include <time.h>
 #include <conio.h>
 #include <stdlib.h>
+#include <math.h>
 
 #define FALSE 0
 #define TRUE 1
@@ -113,6 +114,8 @@ int gameBoard[ROW][COL];
 
 int loopCount = 0;
 
+int cycle = 0;
+
 // structure definitions
 
 // MyTank
@@ -201,6 +204,7 @@ void GoToxy (int x, int y);
 void initiateTank ();
 void myBulletSpawning (MyTank tank);
 int judgeBulletMovement (int x, int y);
+int judgeTank (int x, int y);
 void moveSelfBullet ();
 void initiateMap (int mapNumber);
 void displayMap (int mapNumber);
