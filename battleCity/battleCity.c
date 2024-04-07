@@ -75,6 +75,32 @@ void printEnemyTank(EnemyTank tank)
     GoToxy(0,ROW+5);
 }
 
+void clearEnemyTank(EnemyTank tank)
+{
+    char clear = ' ';
+    for (int i = 0; i < 3; i++)
+    {
+        GoToxy((tank.x-1), tank.y-1+i);
+        printf("%c%c%c", clear, clear, clear);
+        for (int j = 0; j < 3; j++)
+        {
+            gameBoard[tank.y+j-1][tank.x+i-1] = EMPTY;
+        }
+    }
+}
+
+void updateScore()
+{
+    GoToxy(COL + 2, 8);
+    printf("Score: %d", score);
+}
+
+void updateTanksLeft()
+{
+    GoToxy(COL + 2, 13);
+    printf("Tanks Left: %d/%d", tanksRemaining,originalTanks);
+}
+
 void printBullet(Bullet bullet)
 {
     GoToxy(bullet.x, bullet.y);
@@ -117,7 +143,7 @@ void initiateTank()
             break;
 
         case 4:
-            myTank.speed = 3;
+            myTank.speed = 4;
             myTank.bulletPower = 2;
             myTank.bulletSpeed = 3;
             myTank.health = 5;
@@ -219,15 +245,15 @@ void displayMap(int mapNumber)
         }
     }
 
-    GoToxy(COL*2 + 2,3);
+    GoToxy(COL + 2,3);
     printf("Level: %d", mapNumber);
-    GoToxy(COL*2 + 2, 8);
+    GoToxy(COL + 2, 8);
     printf("Score: %d", score);
-    GoToxy(COL*2 + 2, 13);
+    GoToxy(COL + 2, 13);
     printf("Tanks Left: %d/%d", tanksRemaining,originalTanks);
-    GoToxy(COL*2 + 2, 18);
+    GoToxy(COL + 2, 18);
     printf("Lives left: %d", myTank.lives);
-    GoToxy(COL*2 + 2, 23);
+    GoToxy(COL + 2, 23);
     printf("Controls:");
 
     GoToxy(myTank.x,myTank.y);
@@ -520,20 +546,42 @@ void moveSelfBullet()
         if (result == 1)
         {
             tank1.health -= myTank.bulletPower;
-            printf("tank1");
+            if (tank1.health <= 0)
+            {
+                tanksRemaining -= 1;
+                tanksOnField -= 1;
+                score += tank1.scoreGiven;
+                updateTanksLeft();
+                clearEnemyTank(tank1);
+            }
         }
         else if (result == 2)
         {
             tank2.health -= myTank.bulletPower;
-            printf("tank2");
+            if (tank2.health <= 0)
+            {
+                tanksRemaining -= 1;
+                tanksOnField -= 1;
+                score += tank2.scoreGiven;
+                updateTanksLeft();
+                clearEnemyTank(tank2);
+            }
         }
         else
         {
             tank3.health -= myTank.bulletPower;
-            printf("tank3");
+            if (tank3.health <= 0)
+            {
+                tanksRemaining -= 1;
+                tanksOnField -= 1;
+                score += tank3.scoreGiven;
+                updateTanksLeft();
+                clearEnemyTank(tank3);
+            }
         }
 
         myBullet.available = 1;
+        updateScore();
     }
     else
     {
@@ -645,17 +693,21 @@ void tankSpawning(EnemyTank *tank)
     switch (tank->type)
     {
         case 0:
-            tank->speed = 2;
+            tank->speed = 4;
             tank->bulletPower = 1;
             tank->bulletSpeed = 2;
             tank->health = 2;
+            tank->scoreGiven = 500;
+            tank->shape = 0;
             break;
         
         case 1:
-            tank->speed = 5;
+            tank->speed = 1;
             tank->bulletPower = 1;
             tank->bulletSpeed = 5;
             tank->health = 1;
+            tank->scoreGiven = 650;
+            tank->shape = 1;
             break;
     }
 
@@ -713,7 +765,7 @@ void gameLoop()
     {
         cycle += 1;
 
-        if (tanksOnField < 3)
+        if (tanksOnField < 3 && tanksRemaining > 2)
         {
             if (tank1.health <= 0)
             {
@@ -727,18 +779,20 @@ void gameLoop()
             {
                 tankSpawning(&tank3);
             }
-        }
+        }     // -1,0|0,0  up,none 
 
-        getInput(&x, &y, &xG, &yG);     // -1,0|0,0  up,none 
+        if (cycle % myTank.speed == 0)
+        {
+            getInput(&x, &y, &xG, &yG);
 
-        // if (judgeMovement(xG, yG) == 0)
-        if (judgeMovement(xG, yG) == 0 && cycle % myTank.speed == 0)
-        {
-            moveTank(x, y);
-        }
-        else
-        {
+            if (judgeMovement(xG, yG) == 0)
+            {
+                moveTank(x, y);
+            }
+            else
+            {
             printTank(myTank);
+            }
         }
 
         if (tank1.health > 0 && cycle % tank1.speed == 0)

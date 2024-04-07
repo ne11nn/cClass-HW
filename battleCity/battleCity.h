@@ -111,9 +111,6 @@ int tanksOnField = 0;
 
 int gameBoard[ROW][COL];
 
-
-int loopCount = 0;
-
 int cycle = 0;
 
 // structure definitions
