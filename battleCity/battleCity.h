@@ -105,9 +105,9 @@ Index 3: Attack
 Index 4: Water
 Index 5: Explosive
 */ 
-int tanksRemaining;
-int originalTanks;
-int tanksOnField = 0;
+int tanksRemaining; // how many tanks left in match
+int originalTanks; 
+int tanksOnField = 0; // how many tanks on the field
 
 int gameBoard[ROW][COL];
 
@@ -137,7 +137,7 @@ typedef struct
 // EnemyTank
 typedef struct
 {
-    char tankName[50];
+    int number; 
     int x;
     int y;
     int type;
@@ -152,6 +152,7 @@ typedef struct
     int health;
     int levelGenerated;
     int scoreGiven;
+    int bulletAvailable;
 
 } EnemyTank;
 
@@ -192,6 +193,8 @@ typedef struct
 } Powerup;
 
 void getHighScore ();
+void updateScore ();
+void updateTanksLeft ();
 void moveEnemyTank (EnemyTank *tank);
 void hideCursor (int on);
 void printTank (MyTank tank);

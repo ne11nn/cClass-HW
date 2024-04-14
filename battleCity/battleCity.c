@@ -310,6 +310,18 @@ void startScreen()
     system("cls");
 }
 
+void endScreen(int levelNum)
+{
+    GoToxy(15,19);
+    printf("End of Level %d", levelNum);
+    Sleep(500);
+    GoToxy(17,20);
+    printf("Score: %d", score);
+    Sleep(500);
+    GoToxy(13,21);
+    printf("Starting Level %d...", levelNum+1);
+}
+
 void moveTank(int x, int y)
 {
     char empty = ' ';
@@ -418,6 +430,7 @@ void moveEnemyTank(EnemyTank *tank)
 
 void myBulletSpawning(MyTank tank)
 {
+    char clear = ' ';
     if (myBullet.available == 1)
     {
         int x, y;
@@ -442,7 +455,14 @@ void myBulletSpawning(MyTank tank)
             y = tank.y;
         }
 
-        if (gameBoard[y][x] != REINWALL && gameBoard[y][x] != OUTERWALL && gameBoard[y][x] != TREE && gameBoard[y][x] != WATER && gameBoard[y][x] != HOME)
+        if (gameBoard[y][x] == REGWALL)
+        {
+            gameBoard[y][x] = EMPTY;
+            GoToxy(x,y);
+            printf("%c", clear);
+            myBullet.available = 1;
+        }
+        else if (gameBoard[y][x] == EMPTY)
         {
             gameBoard[y][x] = MYBULLET;
             myBullet.x = x;
@@ -456,7 +476,69 @@ void myBulletSpawning(MyTank tank)
     }
 }
 
-int judgeBulletMovement(int x, int y)
+void enemyBulletSpawning(EnemyTank tank)
+{
+    char clear = ' ';
+    Bullet bullet;
+    if (tank.number == 1)
+    {
+        Bullet bullet = bullet1;
+    }
+    else if (tank.number == 2)
+    {
+        Bullet bullet = bullet2;
+    }
+    else if (tank.number == 3)
+    {
+        Bullet bullet = bullet3;
+    }
+
+    if (tank.bulletAvailable == 1)
+    {
+        int x, y;
+        if (tank.direction == UP)
+        {
+            x = tank.x;
+            y = tank.y - 2;
+        }
+        else if (tank.direction == DOWN)
+        {
+            x = tank.x;
+            y = tank.y + 2;
+        }
+        else if (tank.direction == LEFT)
+        {
+            x = tank.x - 2;
+            y = tank.y;
+        }
+        else if (tank.direction == RIGHT)
+        {
+            x = tank.x + 2;
+            y = tank.y;
+        }
+
+        if (gameBoard[y][x] == REGWALL)
+        {
+            gameBoard[y][x] = EMPTY;
+            GoToxy(x,y);
+            printf("%c", clear);
+            tank.bulletAvailable = 1;
+        }
+        else if (gameBoard[y][x] == EMPTY)
+        {
+            gameBoard[y][x] = MYBULLET;
+            bullet.x = x;
+            bullet.y = y;
+            bullet.speed = tank.bulletSpeed;
+            bullet.power = tank.bulletPower;
+            bullet.direction = tank.direction;
+            printBullet(bullet);
+            tank.bulletAvailable = 0;
+        }
+    }
+}
+
+int judgeMyBulletMovement(int x, int y)
 {
     if (gameBoard[y][x] == EMPTY || gameBoard[y][x] == WATER)
     {
@@ -496,6 +578,60 @@ int judgeTank(int x, int y)
 	}
 }
 
+void moveEnemyBullet(EnemyTank tank)
+{
+    char clear = ' ';
+
+    Bullet bullet;
+    int bulletNum;
+    if (tank.number == 1)
+    {
+        Bullet bullet = bullet1;
+        bulletNum = 11;
+    }
+    else if (tank.number == 2)
+    {
+        Bullet bullet = bullet2;
+        bulletNum = 12;
+    }
+    else if (tank.number == 3)
+    {
+        Bullet bullet = bullet3;
+        bulletNum = 13;
+    }
+
+    GoToxy(bullet.x, bullet.y);
+    printf("%c",clear);
+    gameBoard[bullet.y][bullet.x] = EMPTY;
+
+    int x, y;
+    if (bullet.direction == UP)
+    {
+        x = bullet.x;
+        y = bullet.y - 1;
+    }
+    else if (bullet.direction == DOWN)
+    {
+        x = bullet.x;
+        y = bullet.y + 1;
+    }
+    else if (bullet.direction == LEFT)
+    {
+        x = bullet.x - 1;
+        y = bullet.y;
+    }
+    else if (bullet.direction == RIGHT)
+    {
+        x = bullet.x + 1;
+        y = bullet.y;
+    }
+
+    gameBoard[y][x] = bulletNum ;
+    bullet.x = x;
+    bullet.y = y;
+    printBullet(bullet);
+}
+
 void moveSelfBullet()
 {
     char clear = ' ';
@@ -526,21 +662,21 @@ void moveSelfBullet()
         y = myBullet.y;
     }
 
-    if (judgeBulletMovement(x, y) == 2)
+    if (judgeMyBulletMovement(x, y) == 2)
     {
         gameBoard[y][x] = MYBULLET;
         myBullet.x = x;
         myBullet.y = y;
         printBullet(myBullet);
     }
-    else if (judgeBulletMovement(x, y) == 1)
+    else if (judgeMyBulletMovement(x, y) == 1)
     {
         gameBoard[y][x] = EMPTY;
         GoToxy(x,y);
         printf("%c", clear);
         myBullet.available = 1;
     }
-    else if (judgeBulletMovement(x, y) == -1)
+    else if (judgeMyBulletMovement(x, y) == -1)
     {
         int result = judgeTank(x,y);
         if (result == 1)
@@ -551,7 +687,6 @@ void moveSelfBullet()
                 tanksRemaining -= 1;
                 tanksOnField -= 1;
                 score += tank1.scoreGiven;
-                updateTanksLeft();
                 clearEnemyTank(tank1);
             }
         }
@@ -563,7 +698,6 @@ void moveSelfBullet()
                 tanksRemaining -= 1;
                 tanksOnField -= 1;
                 score += tank2.scoreGiven;
-                updateTanksLeft();
                 clearEnemyTank(tank2);
             }
         }
@@ -575,12 +709,12 @@ void moveSelfBullet()
                 tanksRemaining -= 1;
                 tanksOnField -= 1;
                 score += tank3.scoreGiven;
-                updateTanksLeft();
                 clearEnemyTank(tank3);
             }
         }
 
         myBullet.available = 1;
+        updateTanksLeft();
         updateScore();
     }
     else
@@ -798,16 +932,22 @@ void gameLoop()
         if (tank1.health > 0 && cycle % tank1.speed == 0)
         {
             moveEnemyTank(&tank1);
+            enemyBulletSpawning(tank1);
+            moveEnemyBullet(tank1);
         }
 
         if (tank2.health > 0 && cycle % tank2.speed == 0)
         {
             moveEnemyTank(&tank2);
+            enemyBulletSpawning(tank2);
+            moveEnemyBullet(tank2);
         }
 
         if (tank3.health > 0 && cycle % tank3.speed == 0)
         {
             moveEnemyTank(&tank3);
+            enemyBulletSpawning(tank3);
+            moveEnemyBullet(tank3);
         }
 
         
@@ -828,7 +968,13 @@ void gameLoop()
         }
 
         Sleep(20);
+
+        if (tanksRemaining <= 0)
+        {
+            break;
+        }
     }
+    endScreen(1);
 }
 
 void game()
@@ -846,6 +992,12 @@ void game()
 void main()
 {
     myBullet.available = 1;
+    tank1.bulletAvailable = 1;
+    tank2.bulletAvailable = 1;
+    tank3.bulletAvailable = 1;
+    tank1.number = 1;
+    tank2.number = 2;
+    tank3.number = 3;
     srand(time(NULL));
     getHighScore();
     system("cls");
