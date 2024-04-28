@@ -24,6 +24,7 @@ void getHighScore()
 
 void updateHighScore()
 {
+    highscore = score;
     GoToxy(COL + 2, 10);
     printf("Highscore: %d", highscore);
 
@@ -294,6 +295,8 @@ void displayMap(int mapNumber)
     printf("Lives left: %d", myTank.lives);
     GoToxy(COL + 2, 19);
     printf("Controls:");
+    GoToxy(COL + 2, 20);
+    printf("-------------");
     GoToxy(COL + 2, 21);
     printf("↑: Up");
     GoToxy(COL + 2, 22);
@@ -363,7 +366,7 @@ void startScreen()
     system("cls");
 }
 
-void endScreen(int levelNum)
+void endWinScreen(int levelNum)
 {
     SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE),FOREGROUND_INTENSITY|FOREGROUND_GREEN|FOREGROUND_BLUE|FOREGROUND_RED|BACKGROUND_BLUE);
     GoToxy(15,19);
@@ -374,6 +377,19 @@ void endScreen(int levelNum)
     Sleep(500);
     GoToxy(13,21);
     printf("Starting Level %d...", levelNum+1);
+}
+
+void endLoseScreen()
+{
+    SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE),FOREGROUND_INTENSITY|FOREGROUND_GREEN|FOREGROUND_BLUE|FOREGROUND_RED|BACKGROUND_BLUE);
+    GoToxy(17,19);
+    printf("You lost!");
+    Sleep(500);
+    GoToxy(17,20);
+    printf("Score: %d", score);
+    Sleep(500);
+    GoToxy(13,21);
+    printf("High Score: %d...", highscore);
 }
 
 void moveTank(int x, int y)
@@ -1020,10 +1036,10 @@ void gameLoop()
             enemyBulletSpawning(tank1, &bullet1);
         }
 
-        // if (bullet1.available == 0 && cycle % bullet1.speed == 0) // bullet1.available = 0 means bullet is in the air
-        // {
-        //     moveEnemyBullet(tank1, &bullet1);
-        // }
+        if (bullet1.available == 0 && cycle % bullet1.speed == 0) // bullet1.available = 0 means bullet is in the air
+        {
+            moveEnemyBullet(tank1, &bullet1);
+        }
 
         if (tank2.health > 0 && cycle % tank2.speed == 0)
         {
@@ -1031,10 +1047,10 @@ void gameLoop()
             enemyBulletSpawning(tank2, &bullet2);
         }
 
-        // if (bullet2.available == 0 && cycle % bullet2.speed == 0)
-        // {
-        //     moveEnemyBullet(tank2, &bullet2);
-        // }
+        if (bullet2.available == 0 && cycle % bullet2.speed == 0)
+        {
+            moveEnemyBullet(tank2, &bullet2);
+        }
 
         if (tank3.health > 0 && cycle % tank3.speed == 0)
         {
@@ -1042,10 +1058,10 @@ void gameLoop()
             enemyBulletSpawning(tank3, &bullet3);
         }
 
-        // if (bullet3.available == 0 && cycle % bullet3.speed == 0)
-        // {
-        //     moveEnemyBullet(tank3, &bullet3);
-        // }
+        if (bullet3.available == 0 && cycle % bullet3.speed == 0)
+        {
+            moveEnemyBullet(tank3, &bullet3);
+        }
 
         
         // GoToxy(0,ROW+5);
@@ -1064,7 +1080,7 @@ void gameLoop()
             moveSelfBullet();
         }
 
-        Sleep(20);
+        //Sleep(20);
 
         if (tanksRemaining <= 0)
         {
@@ -1073,11 +1089,14 @@ void gameLoop()
 
         if (lives <= 0)
         {
+            endLoseScreen();
             exit(1); // losing
         }
+
+        Sleep(60);
         
     }
-    endScreen(1);
+    endWinScreen(1);
 }
 
 void game()
