@@ -1,4 +1,5 @@
 #include "battleCity.h"
+#include "powerup.h"
 
 MyTank myTank;
 
@@ -273,6 +274,13 @@ void displayMap(int mapNumber)
                     printf("■");
                     break;
 
+                case POWERWALL:
+                    SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE),FOREGROUND_RED|FOREGROUND_BLUE|FOREGROUND_GREEN
+                        |BACKGROUND_RED);
+                    GoToxy(j,i);
+                    printf("■");
+                    break;
+
                 case EMPTY:
                     SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE),FOREGROUND_GREEN
 			        |FOREGROUND_RED|FOREGROUND_BLUE);
@@ -385,11 +393,12 @@ void endLoseScreen()
     GoToxy(17,19);
     printf("You lost!");
     Sleep(500);
-    GoToxy(17,20);
+    GoToxy(16,20);
     printf("Score: %d", score);
     Sleep(500);
     GoToxy(13,21);
-    printf("High Score: %d...", highscore);
+    printf("High Score: %d", highscore);
+    GoToxy(13,40);
 }
 
 void moveTank(int x, int y)
@@ -617,6 +626,10 @@ int judgeBulletMovement(int x, int y)
     {
         return -3;
     }
+    else if (gameBoard[y][x] == POWERWALL)
+    {
+        return -4;
+    }
     else
     {
         return 0;
@@ -716,6 +729,16 @@ void moveEnemyBullet(EnemyTank tank, Bullet* bullet)
     {
         lives = 0;
     }
+    else if (judgeBulletMovement(x, y) == -4)
+    {
+        gameBoard[y][x] = EMPTY;
+        GoToxy(x,y);
+        printf("%c", clear);
+        int powerupType = rand() % 10;
+        gameBoard[x][y] = powerupType + 14;
+        initiatePowerup(x, y, powerupType);
+        bullet->available = 1;
+    }
     else
     {
         bullet->available = 1;
@@ -806,6 +829,16 @@ void moveSelfBullet()
         myBullet.available = 1;
         updateTanksLeft();
         updateScore();
+    }
+    else if (judgeBulletMovement(x, y) == -4)
+    {
+        gameBoard[y][x] = EMPTY;
+        GoToxy(x,y);
+        printf("%c", clear);
+        int powerupType = rand() % 10;
+        gameBoard[x][y] = powerupType + 14;
+        initiatePowerup(x, y, powerupType);
+        myBullet.available = 1;
     }
     else
     {
@@ -958,6 +991,10 @@ int judgeMovement(int x, int y)
             {
                 return 1;
             }
+            if (gameBoard[myTank.y+2*y][myTank.x+2*x+i] >= 14)
+            {
+                return 2;
+            }
         }
     }
 
@@ -968,6 +1005,10 @@ int judgeMovement(int x, int y)
             if (gameBoard[myTank.y+2*y+i][myTank.x+2*x])
             {
                 return 1;
+            }
+            if (gameBoard[myTank.y+2*y+i][myTank.x+2*x] >= 14)
+            {
+                return 2;
             }
         }
     }
@@ -981,6 +1022,7 @@ void gameLoop()
 {
     int x, y, xG, yG;
     int tankType;
+    int powerupConsumed;
     xG = 0;
     yG = -1;
     x = 0;
@@ -1023,6 +1065,11 @@ void gameLoop()
             if (judgeMovement(xG, yG) == 0)
             {
                 moveTank(x, y);
+            }
+            else if (judgeMovement(xG, yG) == 2)
+            {
+                powerupConsumed = gameBoard[myTank.x + x][myTank.y + y];
+                printf("%d", powerupConsumed);
             }
             else
             {
@@ -1090,10 +1137,12 @@ void gameLoop()
         if (lives <= 0)
         {
             endLoseScreen();
+            Sleep(500);
+            SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 7);
             exit(1); // losing
         }
 
-        Sleep(60);
+        Sleep(60); //60
         
     }
     endWinScreen(1);

@@ -40,7 +40,16 @@
 #define BULLET1 11
 #define BULLET2 12
 #define BULLET3 13
-#define POWERUP 14
+#define POWERUPSCORE 14
+#define POWERUPSPEED 15
+#define POWERUPWATER 16
+#define POWERUPEXPLOSIVE 17
+#define POWERUPPOWER 18
+#define POWERUPHEAL 19
+#define POWERUPDEFENSE 20
+#define POWERUPLIFE 21
+#define POWERUPSHIELD 22
+#define POWERUPVISION 23
 
 // MyTank category: M at the start
 #define MREGULAR 0
@@ -55,18 +64,6 @@
 #define EATTACK 3
 #define EWATER 4
 #define EEXPLOSIVE 5
-
-// Powerup category: P at the start
-#define PSCORE 0
-#define PSPEED 1
-#define PWATER 2
-#define PEXPLOSIVE 3
-#define PPOWER 4
-#define PHEALING 5
-#define PDEFENSE 6
-#define PLIFE 7
-#define PSHIELD 8
-#define PVISION 9
 
 // tank shapes
 char* tank_figure[4][3][4]=
@@ -179,18 +176,6 @@ typedef struct
     int dropsPowerup;
 
 } Landscape;
-
-// Powerup
-typedef struct
-{
-    char description[100];
-    int design; // (0, 1, 2, 3, 4, 5, 6, 7, 8, 9) based off [TBD] var
-    int color; // color value wanted
-    char powerupName[100];
-    int type;
-    float duration;
-    
-} Powerup;
 
 void getHighScore ();
 void updateScore ();
