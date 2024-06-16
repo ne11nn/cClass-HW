@@ -14,6 +14,9 @@ Bullet bullet3;
 
 int lives;
 
+int myPowerupTime = -1;
+int myPowerupActive;
+
 void getHighScore()
 {
     FILE *fp = NULL;
@@ -158,33 +161,33 @@ void initiateTank()
     switch (myTank.type)
     {
         case 1:
-            myTank.speed = 3;
+            myTank.speed = 6;
             myTank.bulletPower = 1;
-            myTank.bulletSpeed = 2;
+            myTank.bulletSpeed = 4;
             myTank.health = 3;
             myTank.lives = 4;
             break;
 
         case 2:
-            myTank.speed = 1;
+            myTank.speed = 2;
             myTank.bulletPower = 1;
-            myTank.bulletSpeed = 2;
+            myTank.bulletSpeed = 4;
             myTank.health = 3;
             myTank.lives = 3;
             break;
 
         case 3:
-            myTank.speed = 2;
+            myTank.speed = 4;
             myTank.bulletPower = 2;
-            myTank.bulletSpeed = 2;
+            myTank.bulletSpeed = 4;
             myTank.health = 2;
             myTank.lives = 3;
             break;
 
         case 4:
-            myTank.speed = 4;
+            myTank.speed = 8;
             myTank.bulletPower = 2;
-            myTank.bulletSpeed = 3;
+            myTank.bulletSpeed = 6;
             myTank.health = 5;
             myTank.lives = 3;
             break;
@@ -401,9 +404,46 @@ void endLoseScreen()
     GoToxy(13,40);
 }
 
+void selfPowerupEffect(int powerup)
+{
+    switch (powerup)
+    {
+        case POWERUPSCORE:
+            myPowerupTime = 15;
+            myPowerupActive = POWERUPSCORE;
+            break;
+
+        case POWERUPSPEED:
+            myTank.speed = myTank.speed / 2;
+            myPowerupTime = 15;
+            myPowerupActive = POWERUPSPEED;
+            break;
+
+        case POWERUPHEAL:
+            myTank.health += 2;
+            break;
+
+        case POWERUPLIFE:
+            myTank.lives += 1;
+            updateLives();
+            break;
+    }
+}
+
+void enemyPowerupEffect(int powerup, EnemyTank tank)
+{
+    printf("d");
+}
+
 void moveTank(int x, int y)
 {
     char empty = ' ';
+
+    if (gameBoard[myTank.y + 2*y][myTank.x + 2*x] >= 14)
+    {
+        GoToxy(0,0);
+        selfPowerupEffect(gameBoard[myTank.y + 2*y][myTank.x + 2*x]);
+    }
 
     for (int i = 0; i < 3; i++)
     {
@@ -414,7 +454,6 @@ void moveTank(int x, int y)
             gameBoard[myTank.y+j-1][myTank.x+i-1] = EMPTY;
         } 
     }
-    
 
     myTank.y += y;
     myTank.x += x;
@@ -541,6 +580,16 @@ void myBulletSpawning(MyTank tank)
             printf("%c", clear);
             myBullet.available = 1;
         }
+        else if (gameBoard[y][x] == POWERWALL)
+        {
+            gameBoard[y][x] = EMPTY;
+            GoToxy(x,y);
+            printf("%c", clear);
+            int powerupType = rand() % 10;
+            gameBoard[y][x] = powerupType + 14;
+            initiatePowerup(x, y, powerupType);
+            myBullet.available = 1;
+        }
         else if (gameBoard[y][x] == EMPTY)
         {
             gameBoard[y][x] = MYBULLET;
@@ -626,7 +675,7 @@ int judgeBulletMovement(int x, int y)
     {
         return -3;
     }
-    else if (gameBoard[y][x] == POWERWALL)
+    else if (gameBoard[y][x]== POWERWALL) 
     {
         return -4;
     }
@@ -800,6 +849,10 @@ void moveSelfBullet()
                 tanksRemaining -= 1;
                 tanksOnField -= 1;
                 score += tank1.scoreGiven;
+                if (myPowerupActive == POWERUPSCORE)
+                {
+                    score += tank1.scoreGiven;
+                }
                 clearEnemyTank(tank1);
             }
         }
@@ -811,6 +864,10 @@ void moveSelfBullet()
                 tanksRemaining -= 1;
                 tanksOnField -= 1;
                 score += tank2.scoreGiven;
+                if (myPowerupActive == POWERUPSCORE)
+                {
+                    score += tank2.scoreGiven;
+                }
                 clearEnemyTank(tank2);
             }
         }
@@ -822,6 +879,10 @@ void moveSelfBullet()
                 tanksRemaining -= 1;
                 tanksOnField -= 1;
                 score += tank3.scoreGiven;
+                if (myPowerupActive == POWERUPSCORE)
+                {
+                    score += tank3.scoreGiven;
+                }
                 clearEnemyTank(tank3);
             }
         }
@@ -836,7 +897,7 @@ void moveSelfBullet()
         GoToxy(x,y);
         printf("%c", clear);
         int powerupType = rand() % 10;
-        gameBoard[x][y] = powerupType + 14;
+        gameBoard[y][x] = powerupType + 14;
         initiatePowerup(x, y, powerupType);
         myBullet.available = 1;
     }
@@ -950,18 +1011,18 @@ void tankSpawning(EnemyTank *tank)
     switch (tank->type)
     {
         case 0:
-            tank->speed = 4;
+            tank->speed = 8;
             tank->bulletPower = 2;
-            tank->bulletSpeed = 4;
+            tank->bulletSpeed = 8;
             tank->health = 2;
             tank->scoreGiven = 500;
             tank->shape = 0;
             break;
         
         case 1:
-            tank->speed = 1;
+            tank->speed = 2;
             tank->bulletPower = 1;
-            tank->bulletSpeed = 1;
+            tank->bulletSpeed = 2;
             tank->health = 1;
             tank->scoreGiven = 650;
             tank->shape = 1;
@@ -987,13 +1048,13 @@ int judgeMovement(int x, int y)
     {
         for (int i = -1; i < 2; i++)
         {
-            if (gameBoard[myTank.y+2*y][myTank.x+2*x+i])
-            {
-                return 1;
-            }
             if (gameBoard[myTank.y+2*y][myTank.x+2*x+i] >= 14)
             {
                 return 2;
+            }
+            if (gameBoard[myTank.y+2*y][myTank.x+2*x+i])
+            {
+                return 1;
             }
         }
     }
@@ -1002,13 +1063,13 @@ int judgeMovement(int x, int y)
     {
         for (int i = -1; i < 2; i++)
         {
-            if (gameBoard[myTank.y+2*y+i][myTank.x+2*x])
-            {
-                return 1;
-            }
             if (gameBoard[myTank.y+2*y+i][myTank.x+2*x] >= 14)
             {
                 return 2;
+            }
+            if (gameBoard[myTank.y+2*y+i][myTank.x+2*x])
+            {
+                return 1;
             }
         }
     }
@@ -1067,13 +1128,12 @@ void gameLoop()
                 moveTank(x, y);
             }
             else if (judgeMovement(xG, yG) == 2)
-            {
-                powerupConsumed = gameBoard[myTank.x + x][myTank.y + y];
-                printf("%d", powerupConsumed);
+            {   
+                moveTank(x, y);
             }
             else
             {
-            printTank(myTank);
+                printTank(myTank);
             }
         }
 
@@ -1142,7 +1202,32 @@ void gameLoop()
             exit(1); // losing
         }
 
-        Sleep(60); //60
+        Sleep(25); //60
+
+        myPowerupTime -= 0.025;
+
+        if (myPowerupTime == 0)
+        {
+            switch (myPowerupActive)
+            {
+                case POWERUPSCORE:
+                    myPowerupActive = -1;
+                    myPowerupTime = -1;
+                    break;
+
+                case POWERUPSPEED:
+                    myTank.speed = myTank.speed * 2;
+                    myPowerupActive = -1;
+                    myPowerupTime = -1;
+                    break;
+
+                case POWERUPPOWER:
+                    myTank.bulletPower -= 2;
+                    myPowerupActive = -1;
+                    myPowerupTime = -1;
+                    break;
+            }
+        }
         
     }
     endWinScreen(1);
