@@ -14,6 +14,8 @@ Bullet bullet3;
 
 int lives;
 
+int replaceWater = 0;
+
 double myPowerupTime = -1;
 int myPowerupActive = -1;
 
@@ -286,6 +288,12 @@ void displayMap(int mapNumber)
                 case POWERWALL:
                     SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE),FOREGROUND_RED|FOREGROUND_BLUE|FOREGROUND_GREEN
                         |BACKGROUND_RED);
+                    GoToxy(j,i);
+                    printf("■");
+                    break;
+
+                case WATER:
+                    SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE),FOREGROUND_BLUE|BACKGROUND_BLUE);
                     GoToxy(j,i);
                     printf("■");
                     break;
@@ -714,6 +722,12 @@ int judgeBulletMovement(int x, int y)
     {
         return -4;
     }
+    else if (gameBoard[y][x] == WATER)
+    {
+        GoToxy(53,53);
+        printf("water");
+        return -5;
+    }
     else
     {
         return 0;
@@ -839,6 +853,15 @@ void moveSelfBullet()
     printf("%c",clear);
     gameBoard[myBullet.y][myBullet.x] = EMPTY;
 
+    if (replaceWater == 1)
+    {
+        GoToxy(myBullet.x, myBullet.y);
+        SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE),FOREGROUND_BLUE|BACKGROUND_BLUE);
+        printf("■");
+        gameBoard[myBullet.y][myBullet.x] = WATER;
+        replaceWater = 0;
+    }
+
     int x, y;
     if (myBullet.direction == UP)
     {
@@ -948,10 +971,18 @@ void moveSelfBullet()
         gameBoard[y][x] = EMPTY;
         GoToxy(x,y);
         printf("%c", clear);
-        int powerupType = 3; // rand() % 10;
+        int powerupType = 2; // rand() % 10;
         gameBoard[y][x] = powerupType + 14;
         initiatePowerup(x, y, powerupType);
         myBullet.available = 1;
+    }
+    else if (judgeBulletMovement(x, y) == -5)
+    {
+        // gameBoard[y][x] = MYBULLET;
+        myBullet.x = x;
+        myBullet.y = y;
+        // printBullet(myBullet);
+        replaceWater = 1;
     }
     else
     {
