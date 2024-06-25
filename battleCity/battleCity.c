@@ -14,8 +14,8 @@ Bullet bullet3;
 
 int lives;
 
-int myPowerupTime = -1;
-int myPowerupActive;
+double myPowerupTime = -1;
+int myPowerupActive = -1;
 
 void getHighScore()
 {
@@ -143,6 +143,12 @@ void updateLives()
     printf("Lives left: %d", lives);
 }
 
+void updateHealth()
+{
+    GoToxy(COL + 2, 19);
+    printf("Health left: %d", myTank.health);
+}
+
 void printBullet(Bullet bullet)
 {
     GoToxy(bullet.x, bullet.y);
@@ -172,7 +178,7 @@ void initiateTank()
             myTank.speed = 2;
             myTank.bulletPower = 1;
             myTank.bulletSpeed = 4;
-            myTank.health = 3;
+            myTank.health = 1000; //3
             myTank.lives = 3;
             break;
 
@@ -303,24 +309,26 @@ void displayMap(int mapNumber)
     GoToxy(COL + 2, 13);
     printf("Tanks Left: %d/%d", tanksRemaining,originalTanks);
     GoToxy(COL + 2, 16);
-    printf("Lives left: %d", myTank.lives);
+    printf("Lives left: %d", lives);
     GoToxy(COL + 2, 19);
-    printf("Controls:");
-    GoToxy(COL + 2, 20);
-    printf("-------------");
-    GoToxy(COL + 2, 21);
-    printf("↑: Up");
+    printf("Health left: %d", myTank.health);
     GoToxy(COL + 2, 22);
-    printf("↓: Down");
+    printf("Controls:");
     GoToxy(COL + 2, 23);
-    printf("←: Left");
+    printf("-------------");
     GoToxy(COL + 2, 24);
-    printf("→: Right");
+    printf("↑: Up");
     GoToxy(COL + 2, 25);
-    printf("F: Shoot");
+    printf("↓: Down");
+    GoToxy(COL + 2, 26);
+    printf("←: Left");
     GoToxy(COL + 2, 27);
-    printf("Kill all tanks before you");
+    printf("→: Right");
     GoToxy(COL + 2, 28);
+    printf("F: Shoot");
+    GoToxy(COL + 2, 29);
+    printf("Kill all tanks before you");
+    GoToxy(COL + 2, 30);
     printf("lose all your lives or they reach your home");
 
     GoToxy(myTank.x,myTank.y);
@@ -419,13 +427,40 @@ void selfPowerupEffect(int powerup)
             myPowerupActive = POWERUPSPEED;
             break;
 
+        case POWERUPWATER: 
+            myPowerupTime = 20;
+            myPowerupActive = POWERUPWATER;
+            break;
+
+        case POWERUPEXPLOSIVE:
+            myPowerupTime = 12;
+            myPowerupActive = POWERUPEXPLOSIVE;
+            break;
+
+        case POWERUPPOWER:
+            myTank.bulletPower = myTank.bulletPower + 2;
+            myPowerupTime = 15;
+            myPowerupActive = POWERUPPOWER;
+            break;
+
         case POWERUPHEAL:
             myTank.health += 2;
+            updateHealth();
+            break;
+
+        case POWERUPDEFENSE:
+            myPowerupTime = 18;
+            myPowerupActive = POWERUPDEFENSE;
             break;
 
         case POWERUPLIFE:
-            myTank.lives += 1;
+            lives += 1;
             updateLives();
+            break;
+
+        case POWERUPVISION:
+            myPowerupTime = 25;
+            myPowerupActive = POWERUPVISION;
             break;
     }
 }
@@ -768,10 +803,12 @@ void moveEnemyBullet(EnemyTank tank, Bullet* bullet)
         myTank.health -= bullet->power;
         if (myTank.health <= 0)
         {
+            myTank.health = 0;
             lives -= 1;
             clearSpawnTank();
             updateLives();
         }
+        updateHealth();
         bullet->available = 1;
     }
     else if (judgeBulletMovement(x, y) == -3)
@@ -837,6 +874,21 @@ void moveSelfBullet()
         GoToxy(x,y);
         printf("%c", clear);
         myBullet.available = 1;
+        if (myPowerupActive == POWERUPEXPLOSIVE)
+        {
+            gameBoard[y-1][x] = EMPTY;
+            gameBoard[y+1][x] = EMPTY;
+            gameBoard[y][x-1] = EMPTY;
+            gameBoard[y][x+1] = EMPTY;
+            GoToxy(x+1,y);
+            printf("%c", clear);
+            GoToxy(x-1,y);
+            printf("%c", clear);
+            GoToxy(x,y+1);
+            printf("%c", clear);
+            GoToxy(x,y-1);
+            printf("%c", clear);
+        }
     }
     else if (judgeBulletMovement(x, y) == -1)
     {
@@ -896,7 +948,7 @@ void moveSelfBullet()
         gameBoard[y][x] = EMPTY;
         GoToxy(x,y);
         printf("%c", clear);
-        int powerupType = rand() % 10;
+        int powerupType = 3; // rand() % 10;
         gameBoard[y][x] = powerupType + 14;
         initiatePowerup(x, y, powerupType);
         myBullet.available = 1;
@@ -1052,6 +1104,10 @@ int judgeMovement(int x, int y)
             {
                 return 2;
             }
+            if (gameBoard[myTank.y+2*y][myTank.x+2*x+i] == WATER)
+            {
+                return 3;
+            }
             if (gameBoard[myTank.y+2*y][myTank.x+2*x+i])
             {
                 return 1;
@@ -1066,6 +1122,10 @@ int judgeMovement(int x, int y)
             if (gameBoard[myTank.y+2*y+i][myTank.x+2*x] >= 14)
             {
                 return 2;
+            }
+            if (gameBoard[myTank.y+2*y][myTank.x+2*x+i] == WATER)
+            {
+                return 3;
             }
             if (gameBoard[myTank.y+2*y+i][myTank.x+2*x])
             {
@@ -1126,6 +1186,17 @@ void gameLoop()
             if (judgeMovement(xG, yG) == 0)
             {
                 moveTank(x, y);
+            }
+            else if (judgeMovement(xG, yG) == 3)
+            {
+                if (myPowerupActive == POWERUPWATER)
+                {
+                    moveTank(x, y);
+                }
+                else
+                {
+                    printTank(myTank);
+                }
             }
             else if (judgeMovement(xG, yG) == 2)
             {   
@@ -1202,12 +1273,21 @@ void gameLoop()
             exit(1); // losing
         }
 
-        Sleep(25); //60
+        GoToxy(50, 50);
+        printf("%d",myPowerupActive);
 
-        myPowerupTime -= 0.025;
-
-        if (myPowerupTime == 0)
+        GoToxy(55, 55);
+        printf("%lf",myPowerupTime);
+        
+        if (myPowerupTime > -1)
         {
+            myPowerupTime -= 0.035;
+        }
+
+        if (myPowerupTime <= 0.0 && myPowerupTime > -0.9)
+        {
+            GoToxy(60, 60);
+            printf("end");
             switch (myPowerupActive)
             {
                 case POWERUPSCORE:
@@ -1221,14 +1301,30 @@ void gameLoop()
                     myPowerupTime = -1;
                     break;
 
+                case POWERUPWATER:
+                    myPowerupActive = -1;
+                    myPowerupTime = -1;
+                    break;
+
+                case POWERUPEXPLOSIVE:
+                    myPowerupActive = -1;
+                    myPowerupTime = -1;
+                    break;
+
                 case POWERUPPOWER:
                     myTank.bulletPower -= 2;
                     myPowerupActive = -1;
                     myPowerupTime = -1;
                     break;
+
+                case POWERUPVISION:
+                    myPowerupActive = -1;
+                    myPowerupTime = -1;
+                    break;
             }
         }
-        
+
+        Sleep(25); //60
     }
     endWinScreen(1);
 }

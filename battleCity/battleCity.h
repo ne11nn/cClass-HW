@@ -126,7 +126,7 @@ typedef struct
     int bulletPower;
     int bulletSpeed;
     int health;
-    int lives;
+    int lives; // original amount of lives
     int activePowerup;
 
 } MyTank;
