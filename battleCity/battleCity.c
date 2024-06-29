@@ -14,7 +14,12 @@ Bullet bullet3;
 
 int lives;
 
-int replaceWater = 0;
+int myReplaceWater = 0;
+int oneReplaceWater = 0;
+int twoReplaceWater = 0;
+int threeReplaceWater = 0;
+
+int shieldLost = 0;
 
 double myPowerupTime = -1;
 int myPowerupActive = -1;
@@ -157,6 +162,40 @@ void printBullet(Bullet bullet)
     SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE),FOREGROUND_RED|FOREGROUND_GREEN);
     printf("O");
     SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 7);
+}
+
+void defensePowerup(int rein)
+{
+    for (int i = 18; i < 25; i++)
+    {
+        for (int j = 35; j < 40; j++)
+        {
+            if (i < 23 && i > 19)
+            {
+                if (j < 40 && j > 36)
+                {
+                    break;
+                }
+            }
+            if (rein == 1)
+            {
+                gameBoard[j][i] = REINWALL;
+                GoToxy(i,j);
+                SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE),FOREGROUND_GREEN|FOREGROUND_BLUE|FOREGROUND_RED
+                            |BACKGROUND_GREEN|BACKGROUND_BLUE|BACKGROUND_RED);
+                printf("■");
+                SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 7);
+            }
+            else
+            {
+                gameBoard[j][i] = REGWALL;
+                GoToxy(i,j);
+                SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE),FOREGROUND_INTENSITY|FOREGROUND_GREEN|FOREGROUND_RED|BACKGROUND_GREEN|BACKGROUND_RED);
+				printf("▓"); 
+                SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 7);
+            }
+        }
+    }
 }
 
 void initiateTank()
@@ -459,11 +498,19 @@ void selfPowerupEffect(int powerup)
         case POWERUPDEFENSE:
             myPowerupTime = 18;
             myPowerupActive = POWERUPDEFENSE;
+            defensePowerup(1);
             break;
 
         case POWERUPLIFE:
             lives += 1;
             updateLives();
+            break;
+
+        case POWERUPSHIELD:
+            myPowerupTime = 30;
+            myPowerupActive = POWERUPSHIELD;
+            myTank.health += 5;
+            updateHealth();
             break;
 
         case POWERUPVISION:
@@ -698,7 +745,7 @@ void enemyBulletSpawning(EnemyTank tank, Bullet* bullet)
 
 int judgeBulletMovement(int x, int y)
 {
-    if (gameBoard[y][x] == EMPTY || gameBoard[y][x] == WATER)
+    if (gameBoard[y][x] == EMPTY)
     {
         return 2;
     }
@@ -724,8 +771,6 @@ int judgeBulletMovement(int x, int y)
     }
     else if (gameBoard[y][x] == WATER)
     {
-        GoToxy(53,53);
-        printf("water");
         return -5;
     }
     else
@@ -759,22 +804,47 @@ void moveEnemyBullet(EnemyTank tank, Bullet* bullet)
     char clear = ' ';
 
     int bulletNum;
+    int tempReplaceWater;
     if (tank.number == 1)
     {
         bulletNum = 11;
+        tempReplaceWater = oneReplaceWater;
     }
     else if (tank.number == 2)
     {
         bulletNum = 12;
+        tempReplaceWater = twoReplaceWater;
     }
     else if (tank.number == 3)
     {
         bulletNum = 13;
+        tempReplaceWater = threeReplaceWater;
     }
 
     GoToxy(bullet->x, bullet->y);
     printf("%c",clear);
     gameBoard[bullet->y][bullet->x] = EMPTY;
+
+    if (tempReplaceWater == 1)
+    {
+        GoToxy(bullet->x, bullet->y);
+        SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE),FOREGROUND_BLUE|BACKGROUND_BLUE);
+        printf("■");
+        gameBoard[bullet->y][bullet->x] = WATER;
+        if (tank.number == 1)
+        {
+            oneReplaceWater = 0;
+        }
+        else if (tank.number == 2)
+        {
+            twoReplaceWater = 0;
+        }
+        else if (tank.number == 3)
+        {
+            threeReplaceWater = 0;
+        }
+        SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 7);
+    }
 
     int x, y;
     if (bullet->direction == UP)
@@ -815,6 +885,16 @@ void moveEnemyBullet(EnemyTank tank, Bullet* bullet)
     else if (judgeBulletMovement(x, y) == -2)
     {
         myTank.health -= bullet->power;
+        if (myPowerupActive == POWERUPSHIELD)
+        {
+            shieldLost += bullet->power;
+        }
+        if (shieldLost >= 5)
+        {
+            myPowerupTime = -1;
+            myPowerupActive = -1;
+            shieldLost = 0;
+        }
         if (myTank.health <= 0)
         {
             myTank.health = 0;
@@ -839,6 +919,25 @@ void moveEnemyBullet(EnemyTank tank, Bullet* bullet)
         initiatePowerup(x, y, powerupType);
         bullet->available = 1;
     }
+    else if (judgeBulletMovement(x, y) == -5)
+    {
+        // gameBoard[y][x] = MYBULLET;
+        bullet->x = x;
+        bullet->y = y;
+        // printBullet(myBullet);
+        if (tank.number == 1)
+        {
+            oneReplaceWater = 1;
+        }
+        else if (tank.number == 2)
+        {
+            twoReplaceWater = 1;
+        }
+        else
+        {
+            threeReplaceWater = 1;
+        }
+    }
     else
     {
         bullet->available = 1;
@@ -853,13 +952,14 @@ void moveSelfBullet()
     printf("%c",clear);
     gameBoard[myBullet.y][myBullet.x] = EMPTY;
 
-    if (replaceWater == 1)
+    if (myReplaceWater == 1)
     {
         GoToxy(myBullet.x, myBullet.y);
         SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE),FOREGROUND_BLUE|BACKGROUND_BLUE);
         printf("■");
         gameBoard[myBullet.y][myBullet.x] = WATER;
-        replaceWater = 0;
+        myReplaceWater = 0;
+        SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 7);
     }
 
     int x, y;
@@ -971,7 +1071,7 @@ void moveSelfBullet()
         gameBoard[y][x] = EMPTY;
         GoToxy(x,y);
         printf("%c", clear);
-        int powerupType = 2; // rand() % 10;
+        int powerupType = rand() % 10; // rand() % 10;
         gameBoard[y][x] = powerupType + 14;
         initiatePowerup(x, y, powerupType);
         myBullet.available = 1;
@@ -982,7 +1082,7 @@ void moveSelfBullet()
         myBullet.x = x;
         myBullet.y = y;
         // printBullet(myBullet);
-        replaceWater = 1;
+        myReplaceWater = 1;
     }
     else
     {
@@ -1346,6 +1446,19 @@ void gameLoop()
                     myTank.bulletPower -= 2;
                     myPowerupActive = -1;
                     myPowerupTime = -1;
+                    break;
+
+                case POWERUPDEFENSE:
+                    myPowerupActive = -1;
+                    myPowerupTime = -1;
+                    defensePowerup(0);
+                    break;
+
+                case POWERUPSHIELD:
+                    myPowerupActive = -1;
+                    myPowerupTime = -1;
+                    myTank.health -= 5 - shieldLost;
+                    updateHealth();
                     break;
 
                 case POWERUPVISION:
