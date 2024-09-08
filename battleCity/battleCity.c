@@ -24,6 +24,12 @@ int shieldLost = 0;
 double myPowerupTime = -1;
 int myPowerupActive = -1;
 
+int waterBoard[2][500];
+int treeBoard[2][500];
+
+int waterDetected = 0;
+int treeDetected = 0;
+
 void getHighScore()
 {
     FILE *fp = NULL;
@@ -153,7 +159,7 @@ void updateLives()
 void updateHealth()
 {
     GoToxy(COL + 2, 19);
-    printf("Health left: %d", myTank.health);
+    printf("Health left: %d  ", myTank.health);
 }
 
 void printBullet(Bullet bullet)
@@ -272,6 +278,18 @@ void initiateMap(int mapNumber)
         {
             fscanf(fp, "%d", &gameBoard[i][j]);
             //printf("%d ", gameBoard[i][j]);
+            if (gameBoard[i][j] == WATER)
+            {
+                waterBoard[0][waterDetected] = i;
+                waterBoard[1][waterDetected] = j;
+                waterDetected += 1;
+            }
+            else if (gameBoard[i][j] == TREE)
+            {
+                treeBoard[0][treeDetected] = i;
+                treeBoard[1][treeDetected] = j;
+                treeDetected += 1;
+            }
         }
         //printf("\n");
     }
@@ -525,14 +543,93 @@ void enemyPowerupEffect(int powerup, EnemyTank tank)
     printf("d");
 }
 
+void replaceWater()
+{
+    int x, y;
+    if (myTank.direction == UP)
+    {
+        y = -1;
+        x = 0;
+    }
+    else if (myTank.direction == DOWN)
+    {
+        y = 1;
+        x = 0;
+    }
+    else if (myTank.direction == LEFT)
+    {
+        y = 0;
+        x = -1;
+    }
+    else if (myTank.direction == RIGHT)
+    {
+        y = 0;
+        x = 1;
+    }
+
+    if (x == 0)
+    {
+        for (int i = -1; i < 2; i++)
+        {
+            for (int j = 0; j < waterDetected; j++)
+            {
+                if (waterBoard[0][j] == myTank.y-2*y && waterBoard[1][j] == myTank.x-2*x+i)
+                {
+                    gameBoard[myTank.y-2*y][myTank.x-2*x+i] = WATER;
+                    GoToxy(myTank.x-2*x+i, myTank.y-2*y);
+                    SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE),FOREGROUND_BLUE|BACKGROUND_BLUE);
+                    printf("■");
+                    SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 7);
+                }
+            }
+        }
+    }
+
+    if (y == 0)
+    {
+        for (int i = -1; i < 2; i++)
+        {
+            for (int j = 0; j < waterDetected; j++)
+            {
+                if (waterBoard[0][j] == myTank.y-2*y+i && waterBoard[1][j] == myTank.x-2*x)
+                {
+                    gameBoard[myTank.y-2*y+i][myTank.x-2*x] = WATER;
+                    GoToxy(myTank.x-2*x, myTank.y-2*y+i);
+                    SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE),FOREGROUND_BLUE|BACKGROUND_BLUE);
+                    printf("■");
+                    SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 7);
+                }
+            }
+        }
+    }
+
+    GoToxy(58,58);
+    printf("%d", gameBoard[27][15]);
+}
+
 void moveTank(int x, int y)
 {
     char empty = ' ';
-
-    if (gameBoard[myTank.y + 2*y][myTank.x + 2*x] >= 14)
+    if (x == 0)
     {
-        GoToxy(0,0);
-        selfPowerupEffect(gameBoard[myTank.y + 2*y][myTank.x + 2*x]);
+        for (int i = -1; i < 2; i++)
+        {
+            if (gameBoard[myTank.y+2*y][myTank.x+2*x+i] >= 14)
+            {
+                selfPowerupEffect(gameBoard[myTank.y+2*y][myTank.x+2*x+i]); // if moves into powerup then eat powerup
+            }
+        }
+    }
+
+    if (y == 0)
+    {
+        for (int i = -1; i < 2; i++)
+        {
+            if (gameBoard[myTank.y+2*y+i][myTank.x+2*x] >= 14)
+            {
+                selfPowerupEffect(gameBoard[myTank.y+2*y+i][myTank.x+2*x]);
+            }
+        }
     }
 
     for (int i = 0; i < 3; i++)
@@ -549,7 +646,6 @@ void moveTank(int x, int y)
     myTank.x += x;
 
     printTank(myTank);
-    
 }
 
 int judgeEnemyMovement(EnemyTank tank, int x, int y)
@@ -1071,7 +1167,7 @@ void moveSelfBullet()
         gameBoard[y][x] = EMPTY;
         GoToxy(x,y);
         printf("%c", clear);
-        int powerupType = rand() % 10; // rand() % 10;
+        int powerupType = 2; // rand() % 10;
         gameBoard[y][x] = powerupType + 14;
         initiatePowerup(x, y, powerupType);
         myBullet.available = 1;
@@ -1195,7 +1291,7 @@ void tankSpawning(EnemyTank *tank)
     {
         case 0:
             tank->speed = 8;
-            tank->bulletPower = 2;
+            tank->bulletPower = 3; //2
             tank->bulletSpeed = 8;
             tank->health = 2;
             tank->scoreGiven = 500;
@@ -1204,7 +1300,7 @@ void tankSpawning(EnemyTank *tank)
         
         case 1:
             tank->speed = 2;
-            tank->bulletPower = 1;
+            tank->bulletPower = 3; //1
             tank->bulletSpeed = 2;
             tank->health = 1;
             tank->scoreGiven = 650;
@@ -1254,7 +1350,7 @@ int judgeMovement(int x, int y)
             {
                 return 2;
             }
-            if (gameBoard[myTank.y+2*y][myTank.x+2*x+i] == WATER)
+            if (gameBoard[myTank.y+2*y+i][myTank.x+2*x] == WATER)
             {
                 return 3;
             }
@@ -1467,6 +1563,8 @@ void gameLoop()
                     break;
             }
         }
+
+        replaceWater();
 
         Sleep(25); //60
     }
