@@ -150,6 +150,9 @@ typedef struct
     int levelGenerated;
     int scoreGiven;
     int bulletAvailable;
+    int powerupActive;
+    double powerupTime;
+    int shieldLost;
 
 } EnemyTank;
 
@@ -197,6 +200,7 @@ void startScreen ();
 void moveTank (int x, int y);
 void getInput (int *x, int *y, int *xG, int *yG);
 int judgeMovement (int x, int y);
+void checkETankPowerup (EnemyTank *tank);
 void gameLoop ();
 void game ();
 

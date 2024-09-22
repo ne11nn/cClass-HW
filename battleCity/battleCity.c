@@ -538,9 +538,59 @@ void selfPowerupEffect(int powerup)
     }
 }
 
-void enemyPowerupEffect(int powerup, EnemyTank tank)
+void enemyPowerupEffect(int powerup, EnemyTank *tank)
 {
-    printf("d");
+    switch (powerup)
+    {
+        case POWERUPSCORE:
+            tank->health += 2;
+            break;
+
+        case POWERUPSPEED:
+            tank->speed = tank->speed / 2;
+            tank->powerupTime = 15;
+            tank->powerupActive = POWERUPSPEED;
+            break;
+
+        case POWERUPWATER: 
+            tank->powerupTime = 20;
+            tank->powerupActive = POWERUPWATER;
+            break;
+
+        case POWERUPEXPLOSIVE:
+            tank->powerupTime = 12;
+            tank->powerupActive = POWERUPEXPLOSIVE;
+            break;
+
+        case POWERUPPOWER:
+            tank->bulletPower = tank->bulletPower + 2;
+            tank->powerupTime = 15;
+            tank->powerupActive = POWERUPPOWER;
+            break;
+
+        case POWERUPHEAL:
+            tank->health += 2;
+            break;
+
+        case POWERUPDEFENSE:
+            tank->health += 2;
+            break;
+
+        case POWERUPLIFE:
+            tank->health += 2;
+            break;
+
+        case POWERUPSHIELD:
+            tank->powerupTime = 30;
+            tank->powerupActive = POWERUPSHIELD;
+            tank->health += 5;
+            break;
+
+        case POWERUPVISION:
+            tank->powerupTime = 25;
+            tank->powerupActive = POWERUPVISION;
+            break;
+    }
 }
 
 void replaceWater()
@@ -662,6 +712,10 @@ int judgeEnemyMovement(EnemyTank tank, int x, int y)
     {
         for (int i = -1; i < 2; i++)
         {
+            if (gameBoard[tank.y+2*y][tank.x+2*x+i] >= 14)
+            {
+                return 2;
+            }
             if (gameBoard[tank.y+2*y][tank.x+2*x+i])
             {
                 return 1;
@@ -673,6 +727,10 @@ int judgeEnemyMovement(EnemyTank tank, int x, int y)
     {
         for (int i = -1; i < 2; i++)
         {
+            if (gameBoard[tank.y+2*y][tank.x+2*x+i] >= 14)
+            {
+                return 2;
+            }
             if (gameBoard[tank.y+2*y+i][tank.x+2*x])
             {
                 return 1;
@@ -713,7 +771,30 @@ void moveEnemyTank(EnemyTank *tank)
             x = -1; 
             break;
     }
-    if (judgeEnemyMovement(*tank,x,y) == 0)
+
+    if (x == 0)
+    {
+        for (int i = -1; i < 2; i++)
+        {
+            if (gameBoard[tank->y+2*y][tank->x+2*x+i] >= 14)
+            {
+                enemyPowerupEffect(gameBoard[tank->y+2*y][tank->x+2*x+i], tank);
+            }
+        }
+    }
+
+    if (y == 0)
+    {
+        for (int i = -1; i < 2; i++)
+        {
+            if (gameBoard[tank->y+2*y+i][tank->x+2*x] >= 14)
+            {
+                enemyPowerupEffect(gameBoard[tank->y+2*y+i][tank->x+2*x], tank);
+            }
+        }
+    }
+
+    if (judgeEnemyMovement(*tank, x, y) == 0 || judgeEnemyMovement(*tank, x, y) == 2)
     {
         for (int i = 0; i < 3; i++)
         {
@@ -977,6 +1058,21 @@ void moveEnemyBullet(EnemyTank tank, Bullet* bullet)
         GoToxy(x,y);
         printf("%c", clear);
         bullet->available = 1;
+        if (tank.powerupActive == POWERUPEXPLOSIVE)
+        {
+            gameBoard[y-1][x] = EMPTY;
+            gameBoard[y+1][x] = EMPTY;
+            gameBoard[y][x-1] = EMPTY;
+            gameBoard[y][x+1] = EMPTY;
+            GoToxy(x+1,y);
+            printf("%c", clear);
+            GoToxy(x-1,y);
+            printf("%c", clear);
+            GoToxy(x,y+1);
+            printf("%c", clear);
+            GoToxy(x,y-1);
+            printf("%c", clear);
+        }
     }
     else if (judgeBulletMovement(x, y) == -2)
     {
@@ -1011,7 +1107,7 @@ void moveEnemyBullet(EnemyTank tank, Bullet* bullet)
         GoToxy(x,y);
         printf("%c", clear);
         int powerupType = rand() % 10;
-        gameBoard[x][y] = powerupType + 14;
+        gameBoard[y][x] = powerupType + 14;
         initiatePowerup(x, y, powerupType);
         bullet->available = 1;
     }
@@ -1115,6 +1211,16 @@ void moveSelfBullet()
         if (result == 1)
         {
             tank1.health -= myTank.bulletPower;
+            if (tank1.powerupActive == POWERUPSHIELD)
+            {
+                tank1.shieldLost += myTank.bulletPower;
+            }
+            if (tank1.shieldLost >= 5)
+            {
+                tank1.powerupTime = -1;
+                tank1.powerupActive = -1;
+                tank1.shieldLost = 0;
+            }
             if (tank1.health <= 0)
             {
                 tanksRemaining -= 1;
@@ -1130,6 +1236,16 @@ void moveSelfBullet()
         else if (result == 2)
         {
             tank2.health -= myTank.bulletPower;
+            if (tank2.powerupActive == POWERUPSHIELD)
+            {
+                tank2.shieldLost += myTank.bulletPower;
+            }
+            if (tank2.shieldLost >= 5)
+            {
+                tank2.powerupTime = -1;
+                tank2.powerupActive = -1;
+                tank2.shieldLost = 0;
+            }
             if (tank2.health <= 0)
             {
                 tanksRemaining -= 1;
@@ -1145,6 +1261,16 @@ void moveSelfBullet()
         else
         {
             tank3.health -= myTank.bulletPower;
+            if (tank3.powerupActive == POWERUPSHIELD)
+            {
+                tank3.shieldLost += myTank.bulletPower;
+            }
+            if (tank3.shieldLost >= 5)
+            {
+                tank3.powerupTime = -1;
+                tank3.powerupActive = -1;
+                tank3.shieldLost = 0;
+            }
             if (tank3.health <= 0)
             {
                 tanksRemaining -= 1;
@@ -1167,7 +1293,7 @@ void moveSelfBullet()
         gameBoard[y][x] = EMPTY;
         GoToxy(x,y);
         printf("%c", clear);
-        int powerupType = 2; // rand() % 10;
+        int powerupType = rand() % 10;
         gameBoard[y][x] = powerupType + 14;
         initiatePowerup(x, y, powerupType);
         myBullet.available = 1;
@@ -1364,6 +1490,48 @@ int judgeMovement(int x, int y)
     return 0;
 }
 
+void checkETankPowerup(EnemyTank *tank)
+{
+    if (tank->powerupTime <= 0.0 && tank->powerupTime > -0.9)
+    {
+        switch (tank->powerupActive)
+        {
+            case POWERUPSPEED:
+                tank->speed = tank->speed * 2;
+                tank->powerupActive = -1;
+                tank->powerupTime = -1;
+                break;
+
+            case POWERUPWATER:
+                tank->powerupActive = -1;
+                tank->powerupTime = -1;
+                break;
+
+            case POWERUPEXPLOSIVE: //
+                tank->powerupActive = -1;
+                tank->powerupTime = -1;
+                break;
+
+            case POWERUPPOWER:
+                tank->bulletPower -= 2;
+                tank->powerupActive = -1;
+                tank->powerupTime = -1;
+                break;
+
+            case POWERUPSHIELD:
+                tank->powerupActive = -1;
+                tank->powerupTime = -1;
+                tank->health -= 5 - shieldLost;
+                break;
+
+            case POWERUPVISION:
+                tank->powerupActive = -1;
+                tank->powerupTime = -1;
+                break;
+        }
+    }
+}
+
 // 60 
 
 void gameLoop()
@@ -1511,6 +1679,21 @@ void gameLoop()
             myPowerupTime -= 0.035;
         }
 
+        if (tank1.powerupTime > -1)
+        {
+            tank1.powerupTime -= 0.035;
+        }
+
+        if (tank2.powerupTime > -1)
+        {
+            tank2.powerupTime -= 0.035;
+        }
+
+        if (tank3.powerupTime > -1)
+        {
+            tank3.powerupTime -= 0.035;
+        }
+
         if (myPowerupTime <= 0.0 && myPowerupTime > -0.9)
         {
             GoToxy(60, 60);
@@ -1564,6 +1747,10 @@ void gameLoop()
             }
         }
 
+        checkETankPowerup(&tank1);
+        checkETankPowerup(&tank2);
+        checkETankPowerup(&tank3);
+
         replaceWater();
 
         Sleep(25); //60
@@ -1593,6 +1780,15 @@ void main()
     tank1.number = 1;
     tank2.number = 2;
     tank3.number = 3;
+    tank1.powerupTime = -1;
+    tank2.powerupTime = -1;
+    tank3.powerupTime = -1;
+    tank1.powerupActive = -1;
+    tank2.powerupActive = -1;
+    tank3.powerupActive = -1;
+    tank1.shieldLost = 0;
+    tank2.shieldLost = 0;
+    tank3.shieldLost = 0;
     srand(time(NULL));
     getHighScore();
     system("cls");
