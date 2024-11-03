@@ -77,6 +77,142 @@ void GoToxy(int x, int y)
 	SetConsoleCursorPosition(handle, pos);
 }
 
+void cleanIntArray(int array[HEIGHT][WIDTH]) {
+    for (int y=0; y<HEIGHT; y++) {
+        for (int x=0; x<WIDTH; x++) {
+            array[y][x] = 0;
+        }
+    }
+}
+
+void cleanDoubleArray(double array[HEIGHT][WIDTH]) {
+    for (int y=0; y<HEIGHT; y++) {
+        for (int x=0; x<WIDTH; x++) {
+            array[y][x] = 0;
+        }
+    }
+}
+
+void cleanParentArray(int array[HEIGHT][WIDTH][2]) {
+    for (int y=0; y<HEIGHT; y++) {
+        for (int x=0; x<WIDTH; x++) {
+            array[y][x][0] = -1;
+            array[y][x][1] = -1;
+        }
+    }
+}
+
+void calculateHeuristics(double h[HEIGHT][WIDTH], double g[HEIGHT][WIDTH], double f[HEIGHT][WIDTH], int end[2]) {
+    for (int y=0; y<HEIGHT; y++) {
+        for (int x=0; x<WIDTH; x++) {
+            h[y][x] = sqrt(pow(end[1] - x, 2) + pow(end[0] - y, 2));
+            f[y][x] = g[y][x] + h[y][x];
+        }
+    }
+}
+
+int* getNewCurrent(double f[HEIGHT][WIDTH], int array[HEIGHT][WIDTH], int open[HEIGHT][WIDTH]) {
+    static int lowest[2] = {-1, -1};
+    int lowestValue = 99999;
+    for (int y=0; y<HEIGHT; y++) {
+        for (int x=0; x<WIDTH; x++) {
+            if (f[y][x] < lowestValue && open[y][x] == 1) {
+                lowest[0] = y;
+                lowest[1] = x;
+                lowestValue = f[lowest[0]][lowest[1]];
+            }
+        }
+    }
+    return lowest;
+}
+
+void reconstruct(int* current, int parent[HEIGHT][WIDTH][2], int array[HEIGHT][WIDTH]) {
+    while (parent[current[0]][current[1]][0] != -1) {
+        array[parent[current[0]][current[1]][0]][parent[current[0]][current[1]][1]] = 20;
+        current[0] = parent[current[0]][current[1]][0];
+        current[1] = parent[current[0]][current[1]][1];
+    }
+    printf("\n");
+    printArray(array);
+    printf("\n");
+}
+
+void pathFind(int startX, int startY, int endX, int endY)
+{
+    int parent[ROW][COL][2];
+
+    double f[ROW][COL];
+    double g[ROW][COL];
+    double h[ROW][COL];
+
+    int* current;
+    int done = 0;
+    int numOpen = 0;
+    int open[ROW][COL];
+    int closed[ROW][COL];
+
+    int start[2] = {startX, startY};
+    int end[2] = {endX, endY};
+
+    gameBoard[start[0]][start[1]] = 20;
+    gameBoard[end[0]][end[1]] = 20;
+
+    cleanParentArray(parent);
+    cleanDoubleArray(f);
+    cleanDoubleArray(g);
+    cleanDoubleArray(h);
+    calculateHeuristics(h, g, f, end);
+    cleanIntArray(open);
+    cleanIntArray(closed);
+
+    open[start[0]][start[1]] = 1;
+    numOpen++;
+
+    while (numOpen > 0 && done == 0) {
+        current = getNewCurrent(f, gameBoard, open);
+
+        if (current[0] == end[0] && current[1] == end[1]) {
+            done = 1;
+            reconstruct(current, parent, gameBoard);
+            return 0;
+        }
+
+        open[current[0]][current[1]] = 0;
+        numOpen--;
+        closed[current[0]][current[1]] = 1;
+
+        for (int y=current[0]-1; y<current[0]+2; y++) {
+            for (int x=current[1]-1; x<current[1]+2; x++) {
+                if (x < 0 || y < 0 || x > COL-1 || y > ROW-1 ||
+                    abs(current[0] - y) == abs(current[1] - x) ||
+                    closed[y][x] == 1 || gameBoard[y][x] == 1) {
+                    continue;
+                }
+
+                double tempG = g[current[0]][current[1]] + 1;
+                if (open[y][x] == 1) {
+                    if (tempG < g[y][x]) {
+                        g[y][x] = tempG;
+                        f[y][x] = g[y][x] + h[y][x];
+                        parent[y][x][0] = current[0];
+                        parent[y][x][1] = current[1];
+                    }
+                }
+                else {
+                    g[y][x] = tempG;
+                    open[y][x] = 1;
+                    numOpen++;
+                    f[y][x] = g[y][x] + h[y][x];
+                    parent[y][x][0] = current[0];
+                    parent[y][x][1] = current[1];
+                }
+            }
+        }
+    }
+
+    return 0;
+}
+
 void printTank(MyTank tank)
 {
     char *(*tankF)[4] = tank_figure[tank.shape];
@@ -191,6 +327,38 @@ void defensePowerup(int rein)
                             |BACKGROUND_GREEN|BACKGROUND_BLUE|BACKGROUND_RED);
                 printf("■");
                 SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 7);
+            }
+            else
+            {
+                gameBoard[j][i] = REGWALL;
+                GoToxy(i,j);
+                SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE),FOREGROUND_INTENSITY|FOREGROUND_GREEN|FOREGROUND_RED|BACKGROUND_GREEN|BACKGROUND_RED);
+				printf("▓"); 
+                SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 7);
+            }
+        }
+    }
+}
+
+void enemyDefensePowerup(int rein)
+{
+    char clear = ' ';
+    for (int i = 18; i < 25; i++)
+    {
+        for (int j = 35; j < 40; j++)
+        {
+            if (i < 23 && i > 19)
+            {
+                if (j < 40 && j > 36)
+                {
+                    break;
+                }
+            }
+            if (rein == 1)
+            {
+                gameBoard[j][i] = EMPTY;
+                GoToxy(i,j);
+                printf("%c", clear);
             }
             else
             {
@@ -538,12 +706,69 @@ void selfPowerupEffect(int powerup)
     }
 }
 
+void checkETankPowerup(EnemyTank *tank)
+{
+    if (tank->powerupTime <= 0.0 && tank->powerupTime > -0.9)
+    {
+        switch (tank->powerupActive)
+        {
+            case POWERUPSPEED:
+                tank->speed = tank->speed * 2;
+                tank->powerupActive = -1;
+                tank->powerupTime = -1;
+                break;
+
+            case POWERUPWATER:
+                tank->powerupActive = -1;
+                tank->powerupTime = -1;
+                break;
+
+            case POWERUPEXPLOSIVE: //
+                tank->powerupActive = -1;
+                tank->powerupTime = -1;
+                break;
+
+            case POWERUPPOWER:
+                tank->bulletPower -= 2;
+                tank->powerupActive = -1;
+                tank->powerupTime = -1;
+                break;
+
+            case POWERUPSHIELD:
+                tank->powerupActive = -1;
+                tank->powerupTime = -1;
+                tank->health -= 5 - tank->shieldLost;
+                break;
+
+            case POWERUPDEFENSE:
+                tank->powerupTime = -1;
+                tank->powerupActive = -1;
+                enemyDefensePowerup(0);
+                break;
+
+            case POWERUPVISION:
+                tank->powerupActive = -1;
+                tank->powerupTime = -1;
+                break;
+        }
+    }
+}
+
 void enemyPowerupEffect(int powerup, EnemyTank *tank)
 {
+    if (tank->powerupActive != -1)
+    {
+        tank->powerupTime = 0;
+        checkETankPowerup(tank);
+    }
+    
+    powerup = POWERUPWATER;
+
     switch (powerup)
     {
         case POWERUPSCORE:
-            tank->health += 2;
+            score -= 500;
+            updateScore();
             break;
 
         case POWERUPSPEED:
@@ -573,15 +798,17 @@ void enemyPowerupEffect(int powerup, EnemyTank *tank)
             break;
 
         case POWERUPDEFENSE:
-            tank->health += 2;
+            tank->powerupTime = 18;
+            tank->powerupActive = POWERUPDEFENSE;
+            enemyDefensePowerup(1);
             break;
 
         case POWERUPLIFE:
-            tank->health += 2;
+            lives -= 1;
             break;
 
         case POWERUPSHIELD:
-            tank->powerupTime = 30;
+            tank->powerupTime = 60; //30
             tank->powerupActive = POWERUPSHIELD;
             tank->health += 5;
             break;
@@ -591,6 +818,8 @@ void enemyPowerupEffect(int powerup, EnemyTank *tank)
             tank->powerupActive = POWERUPVISION;
             break;
     }
+    GoToxy(51,51);
+    printf("powerup: %d      speed: %d",powerup,tank->speed);
 }
 
 void replaceWater()
@@ -645,6 +874,70 @@ void replaceWater()
                 {
                     gameBoard[myTank.y-2*y+i][myTank.x-2*x] = WATER;
                     GoToxy(myTank.x-2*x, myTank.y-2*y+i);
+                    SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE),FOREGROUND_BLUE|BACKGROUND_BLUE);
+                    printf("■");
+                    SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 7);
+                }
+            }
+        }
+    }
+
+    GoToxy(58,58);
+    printf("%d", gameBoard[27][15]);
+}
+
+void enemyReplaceWater(EnemyTank *tank)
+{
+    int x, y;
+    if (tank->direction == UP)
+    {
+        y = -1;
+        x = 0;
+    }
+    else if (tank->direction == DOWN)
+    {
+        y = 1;
+        x = 0;
+    }
+    else if (tank->direction == LEFT)
+    {
+        y = 0;
+        x = -1;
+    }
+    else if (tank->direction == RIGHT)
+    {
+        y = 0;
+        x = 1;
+    }
+
+    if (x == 0)
+    {
+        for (int i = -1; i < 2; i++)
+        {
+            for (int j = 0; j < waterDetected; j++)
+            {
+                if (waterBoard[0][j] == tank->y-2*y && waterBoard[1][j] == tank->x-2*x+i)
+                {
+                    gameBoard[tank->y-2*y][tank->x-2*x+i] = WATER;
+                    GoToxy(tank->x-2*x+i, tank->y-2*y);
+                    SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE),FOREGROUND_BLUE|BACKGROUND_BLUE);
+                    printf("■");
+                    SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 7);
+                }
+            }
+        }
+    }
+
+    if (y == 0)
+    {
+        for (int i = -1; i < 2; i++)
+        {
+            for (int j = 0; j < waterDetected; j++)
+            {
+                if (waterBoard[0][j] == tank->y-2*y+i && waterBoard[1][j] == tank->x-2*x)
+                {
+                    gameBoard[tank->y-2*y+i][tank->x-2*x] = WATER;
+                    GoToxy(tank->x-2*x, tank->y-2*y+i);
                     SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE),FOREGROUND_BLUE|BACKGROUND_BLUE);
                     printf("■");
                     SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 7);
@@ -716,6 +1009,10 @@ int judgeEnemyMovement(EnemyTank tank, int x, int y)
             {
                 return 2;
             }
+            if (gameBoard[tank.y+2*y][tank.x+2*x+i] == WATER)
+            {
+                return WATER;
+            }
             if (gameBoard[tank.y+2*y][tank.x+2*x+i])
             {
                 return 1;
@@ -731,6 +1028,10 @@ int judgeEnemyMovement(EnemyTank tank, int x, int y)
             {
                 return 2;
             }
+            if (gameBoard[tank.y+2*y][tank.x+2*x+i] == WATER)
+            {
+                return WATER;
+            }
             if (gameBoard[tank.y+2*y+i][tank.x+2*x])
             {
                 return 1;
@@ -745,6 +1046,7 @@ void moveEnemyTank(EnemyTank *tank)
 {
     char empty = ' ';
     int y, x;
+    int waterThrough = 0;
 
     int direction = rand() % 4;
     (*tank).direction = direction;
@@ -793,8 +1095,16 @@ void moveEnemyTank(EnemyTank *tank)
             }
         }
     }
+    
+    if (judgeEnemyMovement(*tank, x, y) == WATER && tank->powerupActive == POWERUPWATER)
+    {
+        waterThrough = 1;
+    }
 
-    if (judgeEnemyMovement(*tank, x, y) == 0 || judgeEnemyMovement(*tank, x, y) == 2)
+    GoToxy(20, 50);
+    printf("water through: %d", waterThrough);
+
+    if (judgeEnemyMovement(*tank, x, y) == 0 || judgeEnemyMovement(*tank, x, y) == 2 || waterThrough == 1)
     {
         for (int i = 0; i < 3; i++)
         {
@@ -1416,19 +1726,19 @@ void tankSpawning(EnemyTank *tank)
     switch (tank->type)
     {
         case 0:
-            tank->speed = 8;
+            tank->speed = 10; //8
             tank->bulletPower = 3; //2
             tank->bulletSpeed = 8;
-            tank->health = 2;
+            tank->health = 3; // 2
             tank->scoreGiven = 500;
             tank->shape = 0;
             break;
         
         case 1:
-            tank->speed = 2;
+            tank->speed = 10; //2
             tank->bulletPower = 3; //1
             tank->bulletSpeed = 2;
-            tank->health = 1;
+            tank->health = 3; // 1
             tank->scoreGiven = 650;
             tank->shape = 1;
             break;
@@ -1490,48 +1800,6 @@ int judgeMovement(int x, int y)
     return 0;
 }
 
-void checkETankPowerup(EnemyTank *tank)
-{
-    if (tank->powerupTime <= 0.0 && tank->powerupTime > -0.9)
-    {
-        switch (tank->powerupActive)
-        {
-            case POWERUPSPEED:
-                tank->speed = tank->speed * 2;
-                tank->powerupActive = -1;
-                tank->powerupTime = -1;
-                break;
-
-            case POWERUPWATER:
-                tank->powerupActive = -1;
-                tank->powerupTime = -1;
-                break;
-
-            case POWERUPEXPLOSIVE: //
-                tank->powerupActive = -1;
-                tank->powerupTime = -1;
-                break;
-
-            case POWERUPPOWER:
-                tank->bulletPower -= 2;
-                tank->powerupActive = -1;
-                tank->powerupTime = -1;
-                break;
-
-            case POWERUPSHIELD:
-                tank->powerupActive = -1;
-                tank->powerupTime = -1;
-                tank->health -= 5 - shieldLost;
-                break;
-
-            case POWERUPVISION:
-                tank->powerupActive = -1;
-                tank->powerupTime = -1;
-                break;
-        }
-    }
-}
-
 // 60 
 
 void gameLoop()
@@ -1560,18 +1828,18 @@ void gameLoop()
                 bullet1.power = tank1.bulletPower;
                 bullet1.speed = tank1.speed;
             }
-            else if (tank2.health <= 0)
-            {
-                tankSpawning(&tank2);
-                bullet2.power = tank2.bulletPower;
-                bullet2.speed = tank2.speed;
-            }
-            else if (tank3.health <= 0)
-            {
-                tankSpawning(&tank3);
-                bullet3.power = tank3.bulletPower;
-                bullet3.speed = tank3.speed;
-            }
+            // else if (tank2.health <= 0)
+            // {
+            //     tankSpawning(&tank2);
+            //     bullet2.power = tank2.bulletPower;
+            //     bullet2.speed = tank2.speed;
+            // }
+            // else if (tank3.health <= 0)
+            // {
+            //     tankSpawning(&tank3);
+            //     bullet3.power = tank3.bulletPower;
+            //     bullet3.speed = tank3.speed;
+            // }
         }     // -1,0|0,0  up,none 
 
         if (cycle % myTank.speed == 0)
@@ -1667,12 +1935,6 @@ void gameLoop()
             SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 7);
             exit(1); // losing
         }
-
-        GoToxy(50, 50);
-        printf("%d",myPowerupActive);
-
-        GoToxy(55, 55);
-        printf("%lf",myPowerupTime);
         
         if (myPowerupTime > -1)
         {
@@ -1752,8 +2014,18 @@ void gameLoop()
         checkETankPowerup(&tank3);
 
         replaceWater();
+        enemyReplaceWater(&tank1);
+        enemyReplaceWater(&tank2);
+        enemyReplaceWater(&tank3);
 
-        Sleep(25); //60
+        Sleep(5); //25
+
+        GoToxy(53,53);
+        printf("time: %lf       health: %d", tank1.powerupTime, tank1.powerupActive);
+        GoToxy(54,54);
+        printf("time: %lf       health: %d", tank2.powerupTime, tank2.powerupActive);
+        GoToxy(55,55);
+        printf("time: %lf       health: %d", tank3.powerupTime, tank3.powerupActive);
     }
     endWinScreen(1);
 }
